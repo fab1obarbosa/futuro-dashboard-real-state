@@ -4,34 +4,42 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calculator, TrendingUp } from "lucide-react";
+import { Building, TrendingUp } from "lucide-react";
 
 interface SimulatorCardProps {
-  valorInicial: string;
-  setValorInicial: (value: string) => void;
-  valorMensal: string;
-  setValorMensal: (value: string) => void;
-  taxa: string;
-  setTaxa: (value: string) => void;
+  valorImovel: string;
+  setValorImovel: (value: string) => void;
+  valorEntrada: string;
+  setValorEntrada: (value: string) => void;
+  valorAluguel: string;
+  setValorAluguel: (value: string) => void;
+  custosAdicionais: string;
+  setCustosAdicionais: (value: string) => void;
+  valorizacaoAnual: string;
+  setValorizacaoAnual: (value: string) => void;
   periodo: string;
   setPeriodo: (value: string) => void;
-  tipoInvestimento: string;
-  setTipoInvestimento: (value: string) => void;
+  tipoAnalise: string;
+  setTipoAnalise: (value: string) => void;
   onCalculate: () => void;
   isCalculating?: boolean;
 }
 
 export function SimulatorCard({
-  valorInicial,
-  setValorInicial,
-  valorMensal,
-  setValorMensal,
-  taxa,
-  setTaxa,
+  valorImovel,
+  setValorImovel,
+  valorEntrada,
+  setValorEntrada,
+  valorAluguel,
+  setValorAluguel,
+  custosAdicionais,
+  setCustosAdicionais,
+  valorizacaoAnual,
+  setValorizacaoAnual,
   periodo,
   setPeriodo,
-  tipoInvestimento,
-  setTipoInvestimento,
+  tipoAnalise,
+  setTipoAnalise,
   onCalculate,
   isCalculating = false
 }: SimulatorCardProps) {
@@ -40,60 +48,88 @@ export function SimulatorCard({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-3 text-xl text-foreground">
           <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <Calculator className="w-5 h-5 text-primary-foreground" />
+            <Building className="w-5 h-5 text-primary-foreground" />
           </div>
-          Simulador de Investimentos
+          Simulador de Imóveis
         </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="valorInicial" className="text-foreground font-medium">
-              Valor Inicial (R$)
+            <Label htmlFor="valorImovel" className="text-foreground font-medium">
+              Valor do Imóvel (R$)
             </Label>
             <Input
-              id="valorInicial"
+              id="valorImovel"
               type="number"
-              placeholder="10000"
-              value={valorInicial}
-              onChange={(e) => setValorInicial(e.target.value)}
+              placeholder="350000"
+              value={valorImovel}
+              onChange={(e) => setValorImovel(e.target.value)}
               className="bg-background/50 border-border/50 focus:border-primary transition-colors"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="valorMensal" className="text-foreground font-medium">
-              Aporte Mensal (R$)
+            <Label htmlFor="valorEntrada" className="text-foreground font-medium">
+              Valor de Entrada (R$)
             </Label>
             <Input
-              id="valorMensal"
+              id="valorEntrada"
               type="number"
-              placeholder="500"
-              value={valorMensal}
-              onChange={(e) => setValorMensal(e.target.value)}
+              placeholder="70000"
+              value={valorEntrada}
+              onChange={(e) => setValorEntrada(e.target.value)}
               className="bg-background/50 border-border/50 focus:border-primary transition-colors"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="taxa" className="text-foreground font-medium">
-              Taxa de Juros (% ao ano)
+            <Label htmlFor="valorAluguel" className="text-foreground font-medium">
+              Valor do Aluguel Mensal (R$)
             </Label>
             <Input
-              id="taxa"
+              id="valorAluguel"
               type="number"
-              step="0.01"
-              placeholder="12.5"
-              value={taxa}
-              onChange={(e) => setTaxa(e.target.value)}
+              placeholder="2500"
+              value={valorAluguel}
+              onChange={(e) => setValorAluguel(e.target.value)}
+              className="bg-background/50 border-border/50 focus:border-primary transition-colors"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="custosAdicionais" className="text-foreground font-medium">
+              Custos Mensais (R$)
+            </Label>
+            <Input
+              id="custosAdicionais"
+              type="number"
+              placeholder="300"
+              value={custosAdicionais}
+              onChange={(e) => setCustosAdicionais(e.target.value)}
+              className="bg-background/50 border-border/50 focus:border-primary transition-colors"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="valorizacaoAnual" className="text-foreground font-medium">
+              Valorização Anual (%)
+            </Label>
+            <Input
+              id="valorizacaoAnual"
+              type="number"
+              step="0.1"
+              placeholder="5.0"
+              value={valorizacaoAnual}
+              onChange={(e) => setValorizacaoAnual(e.target.value)}
               className="bg-background/50 border-border/50 focus:border-primary transition-colors"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="periodo" className="text-foreground font-medium">
-              Período (anos)
+              Período de Análise (anos)
             </Label>
             <Input
               id="periodo"
@@ -107,17 +143,15 @@ export function SimulatorCard({
         </div>
 
         <div className="space-y-2">
-          <Label className="text-foreground font-medium">Tipo de Investimento</Label>
-          <Select value={tipoInvestimento} onValueChange={setTipoInvestimento}>
+          <Label className="text-foreground font-medium">Tipo de Análise</Label>
+          <Select value={tipoAnalise} onValueChange={setTipoAnalise}>
             <SelectTrigger className="bg-background/50 border-border/50 focus:border-primary">
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border/50">
-              <SelectItem value="poupanca">Poupança (6% a.a.)</SelectItem>
-              <SelectItem value="cdi">CDI (12% a.a.)</SelectItem>
-              <SelectItem value="ipca">IPCA+ (10% a.a.)</SelectItem>
-              <SelectItem value="acoes">Ações (15% a.a.)</SelectItem>
-              <SelectItem value="personalizado">Personalizado</SelectItem>
+              <SelectItem value="aluguel">Apenas Aluguel</SelectItem>
+              <SelectItem value="revenda">Apenas Revenda</SelectItem>
+              <SelectItem value="completa">Aluguel + Revenda</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -135,7 +169,7 @@ export function SimulatorCard({
           ) : (
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Calcular Investimento
+              Analisar Imóvel
             </div>
           )}
         </Button>

@@ -5,9 +5,9 @@ import { BarChart3 } from "lucide-react";
 
 interface ChartData {
   ano: number;
-  valorInvestido: number;
-  valorTotal: number;
-  juros: number;
+  valorImovel: number;
+  aluguelAcumulado: number;
+  lucroTotal: number;
 }
 
 interface ChartCardProps {
@@ -21,7 +21,7 @@ export function ChartCard({ data }: ChartCardProps) {
         <CardContent className="flex items-center justify-center h-64">
           <div className="text-center text-muted-foreground">
             <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Dados do gráfico aparecerão aqui após o cálculo</p>
+            <p>Dados do gráfico aparecerão aqui após a análise</p>
           </div>
         </CardContent>
       </Card>
@@ -44,8 +44,8 @@ export function ChartCard({ data }: ChartCardProps) {
           <p className="font-semibold text-foreground">{`Ano ${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
-              {`${entry.dataKey === 'valorInvestido' ? 'Investido' : 
-                 entry.dataKey === 'valorTotal' ? 'Total' : 'Juros'}: ${formatCurrency(entry.value)}`}
+              {`${entry.dataKey === 'valorImovel' ? 'Valor do Imóvel' : 
+                 entry.dataKey === 'aluguelAcumulado' ? 'Aluguel Acumulado' : 'Lucro Total'}: ${formatCurrency(entry.value)}`}
             </p>
           ))}
         </div>
@@ -56,14 +56,14 @@ export function ChartCard({ data }: ChartCardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Gráfico de Linha - Evolução ao Longo do Tempo */}
+      {/* Gráfico de Linha - Evolução Patrimonial */}
       <Card className="bg-gradient-card border-border/50 shadow-xl animate-slide-up">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3 text-xl text-foreground">
             <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-primary-foreground" />
             </div>
-            Evolução do Investimento
+            Evolução Patrimonial
           </CardTitle>
         </CardHeader>
         
@@ -85,7 +85,15 @@ export function ChartCard({ data }: ChartCardProps) {
                 <Tooltip content={<CustomTooltip />} />
                 <Line 
                   type="monotone" 
-                  dataKey="valorInvestido" 
+                  dataKey="valorImovel" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={3}
+                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: "hsl(var(--primary))", strokeWidth: 2 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="aluguelAcumulado" 
                   stroke="hsl(var(--accent))" 
                   strokeWidth={3}
                   dot={{ fill: "hsl(var(--accent))", strokeWidth: 2, r: 4 }}
@@ -93,11 +101,11 @@ export function ChartCard({ data }: ChartCardProps) {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="valorTotal" 
-                  stroke="hsl(var(--primary))" 
+                  dataKey="lucroTotal" 
+                  stroke="hsl(var(--yellow-primary))" 
                   strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: "hsl(var(--primary))", strokeWidth: 2 }}
+                  dot={{ fill: "hsl(var(--yellow-primary))", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: "hsl(var(--yellow-primary))", strokeWidth: 2 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -105,25 +113,29 @@ export function ChartCard({ data }: ChartCardProps) {
           
           <div className="flex flex-wrap gap-4 mt-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-accent rounded-full"></div>
-              <span className="text-muted-foreground">Valor Investido</span>
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
+              <span className="text-muted-foreground">Valor do Imóvel</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary rounded-full"></div>
-              <span className="text-muted-foreground">Valor Total</span>
+              <div className="w-3 h-3 bg-accent rounded-full"></div>
+              <span className="text-muted-foreground">Aluguel Acumulado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3" style={{ backgroundColor: "hsl(var(--yellow-primary))" }}></div>
+              <span className="text-muted-foreground">Lucro Total</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Gráfico de Barras - Comparação Investido vs Juros */}
+      {/* Gráfico de Barras - Composição dos Ganhos */}
       <Card className="bg-gradient-card border-border/50 shadow-xl animate-slide-up">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3 text-xl text-foreground">
             <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-accent-foreground" />
             </div>
-            Composição do Rendimento
+            Composição dos Ganhos
           </CardTitle>
         </CardHeader>
         
@@ -144,13 +156,13 @@ export function ChartCard({ data }: ChartCardProps) {
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar 
-                  dataKey="valorInvestido" 
+                  dataKey="aluguelAcumulado" 
                   stackId="a"
                   fill="hsl(var(--accent))"
                   radius={[0, 0, 4, 4]}
                 />
                 <Bar 
-                  dataKey="juros" 
+                  dataKey="lucroTotal" 
                   stackId="a"
                   fill="hsl(var(--primary))"
                   radius={[4, 4, 0, 0]}
@@ -162,11 +174,11 @@ export function ChartCard({ data }: ChartCardProps) {
           <div className="flex flex-wrap gap-4 mt-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-accent rounded-full"></div>
-              <span className="text-muted-foreground">Capital Investido</span>
+              <span className="text-muted-foreground">Receita de Aluguel</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-primary rounded-full"></div>
-              <span className="text-muted-foreground">Juros Acumulados</span>
+              <span className="text-muted-foreground">Lucro Total</span>
             </div>
           </div>
         </CardContent>
