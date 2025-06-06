@@ -18,6 +18,7 @@ interface RevenueData {
   condominio: string;
   iptu: string;
   despesasFixas: string;
+  aportesMensais: string;
 }
 
 interface RevenueProjectionCardProps {
@@ -33,15 +34,6 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
       style: 'currency',
       currency: 'BRL'
     }).format(value);
-  };
-
-  const formatInputCurrency = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    const amount = parseFloat(numbers) / 100;
-    return amount.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
   };
 
   const getCurrencyDisplayValue = (value: string) => {
@@ -64,35 +56,35 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
   const estimateRent = () => {
     const valorCompra = parseFloat(propertyData.valorCompra) / 100 || 0;
     if (valorCompra > 0) {
-      // Estimativa baseada em 0.5% a 0.8% do valor do imóvel
-      const rentEstimate = valorCompra * 0.006; // 0.6% como média
+      const rentEstimate = valorCompra * 0.006;
       setData({ ...data, aluguelMensal: (rentEstimate * 100).toString() });
     }
   };
 
-  const aluguelBruto = parseFloat(data.aluguelMensal) / 100 || 0;
-  const condominio = parseFloat(data.condominio) / 100 || 0;
-  const iptu = parseFloat(data.iptu) / 100 || 0;
-  const despesasFixas = parseFloat(data.despesasFixas) / 100 || 0;
-  const vacanciaPerc = parseFloat(data.vacanciaMedia) || 0;
+  // Usar valores padrão quando não preenchidos
+  const aluguelBruto = parseFloat(data.aluguelMensal) / 100 || (parseFloat(propertyData.valorCompra) / 100 * 0.006);
+  const condominio = parseFloat(data.condominio) / 100 || (aluguelBruto * 0.1);
+  const iptu = parseFloat(data.iptu) / 100 || (parseFloat(propertyData.valorCompra) / 100 * 0.01 / 12);
+  const despesasFixas = parseFloat(data.despesasFixas) / 100 || (aluguelBruto * 0.08);
+  const vacanciaPerc = parseFloat(data.vacanciaMedia) || 8.0;
   
   const despesasMensais = condominio + iptu + despesasFixas;
   const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
   const receitaLiquida = aluguelBruto - despesasMensais - vacanciaEstimada;
 
   return (
-    <Card className="bg-gradient-card border-border/50 shadow-xl animate-fade-in">
+    <Card className="bg-gradient-card border-border/50 shadow-lg">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-3 text-xl text-foreground">
-          <div className="w-10 h-10 bg-gradient-accent rounded-lg flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-accent-foreground" />
+          <div className="w-8 h-8 bg-gradient-accent rounded-lg flex items-center justify-center">
+            <TrendingUp className="w-4 h-4 text-accent-foreground" />
           </div>
           Receita Projetada
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="aluguelMensal" className="text-foreground font-medium">
               Aluguel Mensal Previsto (R$)
@@ -130,7 +122,7 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="condominio" className="text-foreground font-medium">Condomínio (R$) - Opcional</Label>
+            <Label htmlFor="condominio" className="text-foreground font-medium">Condomínio (Mensal) - Opcional</Label>
             <Input
               id="condominio"
               type="text"
@@ -142,7 +134,7 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="iptu" className="text-foreground font-medium">IPTU Mensal (R$)</Label>
+            <Label htmlFor="iptu" className="text-foreground font-medium">IPTU (Mensal)</Label>
             <Input
               id="iptu"
               type="text"
@@ -153,7 +145,7 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
             />
           </div>
 
-          <div className="md:col-span-2 space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="despesasFixas" className="text-foreground font-medium">Despesas Fixas/Variadas (R$)</Label>
             <Input
               id="despesasFixas"
@@ -164,23 +156,35 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
               className="bg-background/50 border-border/50"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="aportesMensais" className="text-foreground font-medium">Aportes Mensais (R$) - Opcional</Label>
+            <Input
+              id="aportesMensais"
+              type="text"
+              placeholder="500,00"
+              value={getCurrencyDisplayValue(data.aportesMensais)}
+              onChange={(e) => handleCurrencyInput('aportesMensais', e.target.value)}
+              className="bg-background/50 border-border/50"
+            />
+          </div>
         </div>
 
         {/* Botão de Calcular */}
-        <div className="flex justify-center">
+        <div className="flex justify-center pt-2">
           <Button 
             onClick={onCalculate}
-            className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold py-3 px-8"
+            className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold py-2 px-6"
           >
-            <Calculator className="w-5 h-5 mr-2" />
+            <Calculator className="w-4 h-4 mr-2" />
             Calcular Análise
           </Button>
         </div>
 
         {/* Resumo da Receita */}
-        <div className="mt-6 p-4 bg-gradient-primary/10 rounded-lg border border-primary/20">
-          <h3 className="font-semibold text-foreground mb-4">Resumo da Receita</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="mt-4 p-3 bg-gradient-primary/10 rounded-lg border border-primary/20">
+          <h3 className="font-semibold text-foreground mb-3">Resumo da Receita</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground">Aluguel Bruto:</span>
               <p className="font-semibold text-primary">{formatCurrency(aluguelBruto)}</p>
@@ -197,6 +201,9 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
               <span className="text-muted-foreground">Receita Líquida:</span>
               <p className="font-semibold text-accent">{formatCurrency(receitaLiquida)}</p>
             </div>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            *Despesas incluem: Condomínio ({formatCurrency(condominio)}), IPTU ({formatCurrency(iptu)}), Despesas Fixas ({formatCurrency(despesasFixas)})
           </div>
         </div>
       </CardContent>

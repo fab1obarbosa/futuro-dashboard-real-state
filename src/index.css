@@ -145,3 +145,48 @@
 .bg-gradient-accent {
   background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--blue-medium)) 100%);
 }
+
+/* Estilos para impressão/PDF */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12px;
+  }
+  
+  .bg-gradient-card,
+  .bg-gradient-primary,
+  .bg-gradient-accent {
+    background: white !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+  }
+  
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none !important;
+  }
+  
+  .grid {
+    display: block !important;
+  }
+  
+  .grid > * {
+    margin-bottom: 1rem !important;
+    page-break-inside: avoid;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  .recharts-wrapper {
+    page-break-inside: avoid;
+    margin-bottom: 2rem !important;
+  }
+}

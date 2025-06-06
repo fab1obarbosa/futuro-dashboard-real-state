@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -29,33 +28,47 @@ interface PropertySimulatorCardProps {
 }
 
 const estadosCidades = {
-  "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba", "Osasco", "Bauru", "Piracicaba"],
-  "RJ": ["Rio de Janeiro", "Niterói", "Nova Iguaçu", "Duque de Caxias", "Campos dos Goytacazes", "Petrópolis"],
-  "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
-  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria", "Gravataí"],
-  "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "São José dos Pinhais"],
-  "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma", "Chapecó"],
-  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro", "Ilhéus"],
-  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde", "Luziânia", "Águas Lindas"],
+  "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira"],
+  "AL": ["Maceió", "Arapiraca", "Palmeira dos Índios", "Rio Largo"],
+  "AP": ["Macapá", "Santana", "Laranjal do Jari"],
+  "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
+  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro", "Ilhéus", "Lauro de Freitas", "Itabuna"],
+  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral", "Crato", "Itapipoca"],
   "DF": ["Brasília"],
-  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral", "Crato"]
+  "ES": ["Vitória", "Cariacica", "Vila Velha", "Serra", "Cachoeiro de Itapemirim"],
+  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde", "Luziânia", "Águas Lindas"],
+  "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
+  "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
+  "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá", "Ponta Porã"],
+  "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros", "Ribeirão das Neves", "Uberaba"],
+  "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Parauapebas", "Castanhal"],
+  "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos", "Bayeux"],
+  "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "São José dos Pinhais", "Foz do Iguaçu"],
+  "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina", "Paulista"],
+  "PI": ["Teresina", "Parnaíba", "Picos", "Piripiri", "Floriano"],
+  "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Campos dos Goytacazes", "Belford Roxo"],
+  "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante", "Macaíba"],
+  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria", "Gravataí", "Viamão"],
+  "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena", "Cacoal"],
+  "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
+  "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma", "Chapecó", "Itajaí"],
+  "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
+  "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
+  "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"]
 };
 
 const taxasJurosPorEstado = {
-  "SP": "10.5",
-  "RJ": "11.0",
-  "MG": "10.8",
-  "RS": "10.7",
-  "PR": "10.6",
-  "SC": "10.4",
-  "BA": "11.2",
-  "GO": "10.9",
-  "DF": "10.3",
-  "CE": "11.5"
+  "AC": "12.5", "AL": "12.8", "AP": "12.7", "AM": "12.6", "BA": "11.2",
+  "CE": "11.5", "DF": "10.3", "ES": "10.9", "GO": "10.9", "MA": "12.4",
+  "MT": "11.1", "MS": "11.0", "MG": "10.8", "PA": "12.3", "PB": "12.1",
+  "PR": "10.6", "PE": "11.8", "PI": "12.2", "RJ": "11.0", "RN": "12.0",
+  "RS": "10.7", "RO": "12.4", "RR": "12.8", "SC": "10.4", "SP": "10.5",
+  "SE": "12.0", "TO": "12.1"
 };
 
 export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardProps) {
   const [cidadesFiltradas, setCidadesFiltradas] = useState<string[]>([]);
+  const [searchCidade, setSearchCidade] = useState("");
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -67,6 +80,15 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
   const formatInputCurrency = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     const amount = parseFloat(numbers) / 100;
+    return amount.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  const getCurrencyDisplayValue = (value: string) => {
+    if (!value) return '';
+    const amount = parseFloat(value) / 100;
     return amount.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -119,18 +141,12 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
   };
 
   const handleCurrencyInput = (field: keyof PropertyData, value: string) => {
-    const formatted = formatInputCurrency(value);
     updateData(field, value.replace(/\D/g, ''));
   };
 
-  const getCurrencyDisplayValue = (value: string) => {
-    if (!value) return '';
-    const amount = parseFloat(value) / 100;
-    return amount.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
+  const cidadesFiltradas2 = cidadesFiltradas.filter(cidade => 
+    cidade.toLowerCase().includes(searchCidade.toLowerCase())
+  );
 
   const valorCompraNum = parseFloat(data.valorCompra) / 100 || 0;
   const valorEntradaNum = parseFloat(data.valorEntrada) / 100 || 0;
@@ -138,18 +154,18 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
   const parcelaNum = parseFloat(data.valorParcela) / 100 || 0;
 
   return (
-    <Card className="bg-gradient-card border-border/50 shadow-xl animate-fade-in">
+    <Card className="bg-gradient-card border-border/50 shadow-lg">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-3 text-xl text-foreground">
-          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <Building className="w-5 h-5 text-primary-foreground" />
+          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <Building className="w-4 h-4 text-primary-foreground" />
           </div>
           Simulador de Imóveis
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="estado" className="text-foreground font-medium">Estado</Label>
             <Select value={data.estado} onValueChange={(value) => updateData('estado', value)}>
@@ -173,7 +189,15 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
                 <SelectValue placeholder="Selecione a cidade" />
               </SelectTrigger>
               <SelectContent>
-                {cidadesFiltradas.map((cidade) => (
+                <div className="p-2">
+                  <Input
+                    placeholder="Digite para buscar..."
+                    value={searchCidade}
+                    onChange={(e) => setSearchCidade(e.target.value)}
+                    className="mb-2"
+                  />
+                </div>
+                {cidadesFiltradas2.map((cidade) => (
                   <SelectItem key={cidade} value={cidade}>
                     {cidade}
                   </SelectItem>
@@ -339,9 +363,9 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
         </div>
 
         {/* Resumo */}
-        <div className="mt-6 p-4 bg-gradient-accent/10 rounded-lg border border-accent/20">
-          <h3 className="font-semibold text-foreground mb-4">Resumo Financeiro</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="mt-4 p-3 bg-gradient-accent/10 rounded-lg border border-accent/20">
+          <h3 className="font-semibold text-foreground mb-3">Resumo Financeiro</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground">Valor de Compra:</span>
               <p className="font-semibold text-primary">{formatCurrency(valorCompraNum)}</p>

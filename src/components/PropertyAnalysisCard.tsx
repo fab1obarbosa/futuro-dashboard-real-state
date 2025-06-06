@@ -20,6 +20,7 @@ interface RevenueData {
   condominio: string;
   iptu: string;
   despesasFixas: string;
+  aportesMensais: string;
 }
 
 interface PropertyAnalysisCardProps {
@@ -43,18 +44,19 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   const outrasDespesas = parseFloat(propertyData.outrasDespesas) / 100 || 0;
   const taxaCartorio = (parseFloat(propertyData.taxaCartorio) || 0) / 100;
   const prazoFinanciamento = parseFloat(propertyData.prazoFinanciamento) || 0;
-  const jurosAnual = parseFloat(propertyData.percentualJuros) || 0;
+  const valorParcela = parseFloat(propertyData.valorParcela) / 100 || 0;
   
   const custoCartorio = valorCompra * taxaCartorio;
-  const valorParcela = parseFloat(propertyData.valorParcela) / 100 || 0;
   const totalJurosFinanciamento = (valorParcela * prazoFinanciamento) - valorFinanciado;
   const custoTotalInvestimento = valorCompra + totalJurosFinanciamento + reforma + outrasDespesas + custoCartorio;
   
-  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || 0;
-  const condominio = parseFloat(revenueData.condominio) / 100 || 0;
-  const iptu = parseFloat(revenueData.iptu) / 100 || 0;
-  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || 0;
-  const vacanciaPerc = parseFloat(revenueData.vacanciaMedia) || 0;
+  // Usar valores padrão quando não preenchidos
+  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || (valorCompra * 0.006);
+  const condominio = parseFloat(revenueData.condominio) / 100 || (aluguelBruto * 0.1);
+  const iptu = parseFloat(revenueData.iptu) / 100 || (valorCompra * 0.01 / 12);
+  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || (aluguelBruto * 0.08);
+  const vacanciaPerc = parseFloat(revenueData.vacanciaMedia) || 8.0;
+  const aportesMensais = parseFloat(revenueData.aportesMensais) / 100 || 0;
   
   const custosMensais = valorParcela + condominio + iptu + despesasFixas;
   const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
@@ -64,7 +66,10 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   
   const roiMensal = custoTotalInvestimento > 0 ? (resultadoMensal / custoTotalInvestimento) * 100 : 0;
   const roiAnual = roiMensal * 12;
-  const paybackMeses = resultadoMensal > 0 ? custoTotalInvestimento / resultadoMensal : 0;
+  
+  // Payback com aportes
+  const fluxoMensalTotal = resultadoMensal + aportesMensais;
+  const paybackMeses = fluxoMensalTotal > 0 ? custoTotalInvestimento / fluxoMensalTotal : 0;
   
   // Valorização anual estimada (5% ao ano)
   const valorizacaoAnual = 5;
@@ -72,10 +77,8 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   const ganhoValorizacao = valorFuturoImovel - valorCompra;
   
   // Comparativos (valores aproximados)
-  const cdiAnual = 11.75; // CDI atual aproximado
-  const poupancaAnual = 6.17; // Poupança atual aproximada
-  
-  const melhorQueInvestimentos = roiAnual > cdiAnual && roiAnual > poupancaAnual;
+  const cdiAnual = 11.75;
+  const poupancaAnual = 6.17;
 
   const analysisItems = [
     {
@@ -89,8 +92,8 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       title: "Custos Mensais",
       value: formatCurrency(custosMensais),
       icon: Calculator,
-      color: "text-destructive",
-      bgColor: "bg-destructive/10"
+      color: "text-red-300",
+      bgColor: "bg-red-500/10"
     },
     {
       title: "Receita Líquida Mensal",
@@ -124,8 +127,8 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       title: "Resultado Mensal Final",
       value: formatCurrency(resultadoMensal),
       icon: Target,
-      color: resultadoMensal > 0 ? "text-accent" : "text-destructive",
-      bgColor: resultadoMensal > 0 ? "bg-accent/10" : "bg-destructive/10"
+      color: resultadoMensal > 0 ? "text-accent" : "text-red-300",
+      bgColor: resultadoMensal > 0 ? "bg-accent/10" : "bg-red-500/10"
     },
     {
       title: "Payback Estimado",
@@ -144,31 +147,30 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   ];
 
   return (
-    <Card className="bg-gradient-card border-border/50 shadow-xl animate-slide-up">
+    <Card className="bg-gradient-card border-border/50 shadow-lg">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-3 text-xl text-foreground">
-          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <Target className="w-5 h-5 text-primary-foreground" />
+          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <Target className="w-4 h-4 text-primary-foreground" />
           </div>
           Análise do Imóvel
         </CardTitle>
       </CardHeader>
       
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {analysisItems.map((item, index) => (
             <div 
               key={item.title}
-              className="p-4 rounded-lg bg-background/30 border border-border/30 hover:bg-background/50 transition-all duration-200"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="p-3 rounded-lg bg-background/30 border border-border/30 hover:bg-background/50 transition-all duration-200"
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`w-8 h-8 ${item.bgColor} rounded-lg flex items-center justify-center`}>
-                  <item.icon className={`w-4 h-4 ${item.color}`} />
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-6 h-6 ${item.bgColor} rounded-lg flex items-center justify-center`}>
+                  <item.icon className={`w-3 h-3 ${item.color}`} />
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">{item.title}</span>
+                <span className="text-xs font-medium text-muted-foreground">{item.title}</span>
               </div>
-              <div className={`text-lg font-bold ${item.color}`}>
+              <div className={`text-sm font-bold ${item.color}`}>
                 {item.value}
               </div>
             </div>
@@ -176,26 +178,26 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
         </div>
 
         {/* Comparativo de Investimentos */}
-        <div className="mt-6 p-4 bg-gradient-accent/10 rounded-lg border border-accent/20">
+        <div className="mt-4 p-3 bg-gradient-accent/10 rounded-lg border border-accent/20">
           <h3 className="font-semibold text-foreground mb-3">Comparativo de Investimentos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
             <div className="text-center">
               <span className="text-muted-foreground">Imóvel (ROI)</span>
-              <p className="font-bold text-xl text-primary">{roiAnual.toFixed(2)}%</p>
+              <p className="font-bold text-lg text-primary">{roiAnual.toFixed(2)}%</p>
             </div>
             <div className="text-center">
               <span className="text-muted-foreground">CDI</span>
-              <p className="font-bold text-xl text-accent">{cdiAnual}%</p>
+              <p className="font-bold text-lg text-accent">{cdiAnual}%</p>
             </div>
             <div className="text-center">
               <span className="text-muted-foreground">Poupança</span>
-              <p className="font-bold text-xl text-accent">{poupancaAnual}%</p>
+              <p className="font-bold text-lg text-accent">{poupancaAnual}%</p>
             </div>
           </div>
           
-          {!melhorQueInvestimentos && (
-            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-sm text-destructive font-medium">
+          {roiAnual <= Math.max(cdiAnual, poupancaAnual) && (
+            <div className="mt-3 p-2 bg-red-500/10 border border-red-300/20 rounded-lg">
+              <p className="text-xs text-red-300 font-medium">
                 ⚠️ Atenção: Este investimento tem rentabilidade inferior ao CDI ou Poupança.
               </p>
             </div>

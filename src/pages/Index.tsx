@@ -31,6 +31,7 @@ interface RevenueData {
   condominio: string;
   iptu: string;
   despesasFixas: string;
+  aportesMensais: string;
 }
 
 const Index = () => {
@@ -57,7 +58,8 @@ const Index = () => {
     vacanciaMedia: "8.0",
     condominio: "",
     iptu: "",
-    despesasFixas: ""
+    despesasFixas: "",
+    aportesMensais: ""
   });
 
   const [isCalculated, setIsCalculated] = useState(false);
@@ -81,7 +83,7 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto space-y-6 px-4">
+      <div className="max-w-6xl mx-auto space-y-4 px-4">
         {/* Header */}
         <div className="text-center space-y-4 animate-fade-in">
           <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
@@ -131,7 +133,7 @@ const Index = () => {
         )}
 
         {/* Footer */}
-        <footer className="mt-12 py-4 border-t border-border/30 text-center">
+        <footer className="mt-8 py-2 border-t border-border/30 text-center">
           <p className="text-xs text-muted-foreground">
             <span className="font-semibold">Construa seu Futuro</span> - Todos os Direitos Reservados
           </p>
