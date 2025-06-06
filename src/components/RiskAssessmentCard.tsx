@@ -1,9 +1,10 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 
 interface PropertyData {
+  estado: string;
   cidade: string;
   tipo: string;
   valorCompra: string;
@@ -47,7 +48,7 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
   };
 
   const calculateCompetition = () => {
-    const valorCompra = parseFloat(propertyData.valorCompra) || 0;
+    const valorCompra = parseFloat(propertyData.valorCompra) / 100 || 0;
     if (valorCompra < 200000) return 85;
     if (valorCompra < 500000) return 70;
     if (valorCompra < 1000000) return 55;
@@ -56,29 +57,30 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
 
   const calculateVacancyRisk = () => {
     const vacancia = parseFloat(revenueData.vacanciaMedia) || 0;
-    if (vacancia <= 5) return 85;
-    if (vacancia <= 10) return 70;
+    if (vacancia <= 5) return 15; // Baixo risco
+    if (vacancia <= 10) return 30;
     if (vacancia <= 15) return 55;
-    return 35;
+    return 85; // Alto risco
   };
 
   const calculateDevaluationRisk = () => {
     const location = calculateLocation();
     const liquidity = calculateLiquidity();
-    return (location + liquidity) / 2;
+    // Inverter para mostrar risco (menor é melhor)
+    return 100 - ((location + liquidity) / 2);
   };
 
-  const liquidez = calculateLiquidity();
-  const localizacao = calculateLocation();
-  const concorrencia = calculateCompetition();
+  const liquidez = 100 - calculateLiquidity(); // Inverter para risco
+  const localizacao = 100 - calculateLocation(); // Inverter para risco
+  const concorrencia = 100 - calculateCompetition(); // Inverter para risco
   const riscoVacancia = calculateVacancyRisk();
   const riscoDesvalorizacao = calculateDevaluationRisk();
   
   const mediaGeral = (liquidez + localizacao + concorrencia + riscoVacancia + riscoDesvalorizacao) / 5;
 
   const getInvestmentAdvice = (score: number) => {
-    if (score >= 75) return { text: "✅ Excelente investimento! Baixo risco e boa perspectiva de retorno.", color: "text-green-600" };
-    if (score >= 60) return { text: "⚠️ Investimento médio. Considere os riscos antes de prosseguir.", color: "text-yellow-600" };
+    if (score <= 30) return { text: "✅ Excelente investimento! Baixo risco e boa perspectiva de retorno.", color: "text-green-600" };
+    if (score <= 60) return { text: "⚠️ Investimento médio. Considere os riscos antes de prosseguir.", color: "text-yellow-600" };
     return { text: "❌ Investimento arriscado. Recomendamos cautela e reavaliação.", color: "text-red-600" };
   };
 
@@ -133,10 +135,16 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
               </div>
               <span className="text-lg font-bold text-primary">{item.value.toFixed(0)}%</span>
             </div>
-            <Progress 
-              value={item.value} 
-              className="h-3"
-            />
+            <div className="relative">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Baixo</span>
+                <span>Alto</span>
+              </div>
+              <Progress 
+                value={item.value} 
+                className="h-3"
+              />
+            </div>
           </div>
         ))}
 
@@ -146,7 +154,13 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
             <h3 className="font-semibold text-foreground">Média Geral de Riscos</h3>
             <span className="text-2xl font-bold text-primary">{mediaGeral.toFixed(0)}%</span>
           </div>
-          <Progress value={mediaGeral} className="h-4 mb-3" />
+          <div className="relative">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>Baixo Risco</span>
+              <span>Alto Risco</span>
+            </div>
+            <Progress value={mediaGeral} className="h-4 mb-3" />
+          </div>
           <p className={`text-sm font-medium ${advice.color}`}>
             {advice.text}
           </p>

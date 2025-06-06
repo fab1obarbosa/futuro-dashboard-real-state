@@ -2,19 +2,18 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building, Calculator } from "lucide-react";
-import { useEffect } from "react";
+import { Building } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface PropertyData {
-  cidade: string;
   estado: string;
+  cidade: string;
   tipo: string;
   finalidade: string;
   valorCompra: string;
-  valorEntrada: string;
   financiamento: string;
+  valorEntrada: string;
   valorFinanciado: string;
   percentualJuros: string;
   prazoFinanciamento: string;
@@ -27,23 +26,37 @@ interface PropertyData {
 interface PropertySimulatorCardProps {
   data: PropertyData;
   setData: (data: PropertyData) => void;
-  onCalculate: () => void;
 }
 
-const cidades = [
-  { nome: "São Paulo", estado: "SP" },
-  { nome: "Rio de Janeiro", estado: "RJ" },
-  { nome: "Belo Horizonte", estado: "MG" },
-  { nome: "Brasília", estado: "DF" },
-  { nome: "Curitiba", estado: "PR" },
-  { nome: "Porto Alegre", estado: "RS" },
-  { nome: "Salvador", estado: "BA" },
-  { nome: "Fortaleza", estado: "CE" },
-  { nome: "Recife", estado: "PE" },
-  { nome: "Goiânia", estado: "GO" }
-];
+const estadosCidades = {
+  "SP": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto", "Sorocaba", "Osasco", "Bauru", "Piracicaba"],
+  "RJ": ["Rio de Janeiro", "Niterói", "Nova Iguaçu", "Duque de Caxias", "Campos dos Goytacazes", "Petrópolis"],
+  "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros"],
+  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria", "Gravataí"],
+  "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "São José dos Pinhais"],
+  "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma", "Chapecó"],
+  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro", "Ilhéus"],
+  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde", "Luziânia", "Águas Lindas"],
+  "DF": ["Brasília"],
+  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral", "Crato"]
+};
 
-export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySimulatorCardProps) {
+const taxasJurosPorEstado = {
+  "SP": "10.5",
+  "RJ": "11.0",
+  "MG": "10.8",
+  "RS": "10.7",
+  "PR": "10.6",
+  "SC": "10.4",
+  "BA": "11.2",
+  "GO": "10.9",
+  "DF": "10.3",
+  "CE": "11.5"
+};
+
+export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardProps) {
+  const [cidadesFiltradas, setCidadesFiltradas] = useState<string[]>([]);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -51,32 +64,78 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
     }).format(value);
   };
 
+  const formatInputCurrency = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    const amount = parseFloat(numbers) / 100;
+    return amount.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   const updateData = (field: keyof PropertyData, value: string) => {
     const newData = { ...data, [field]: value };
     
     // Auto-calcular campos dependentes
-    if (field === 'cidade') {
-      const cidade = cidades.find(c => c.nome === value);
-      if (cidade) {
-        newData.estado = cidade.estado;
-      }
+    if (field === 'estado') {
+      setCidadesFiltradas(estadosCidades[value as keyof typeof estadosCidades] || []);
+      newData.cidade = "";
+      newData.percentualJuros = taxasJurosPorEstado[value as keyof typeof taxasJurosPorEstado] || "10.5";
     }
     
     if (field === 'valorCompra' || field === 'valorEntrada') {
-      const valorCompra = parseFloat(newData.valorCompra) || 0;
-      const valorEntrada = parseFloat(newData.valorEntrada) || 0;
+      const valorCompra = parseFloat(newData.valorCompra.replace(/\D/g, '')) / 100 || 0;
+      const valorEntrada = parseFloat(newData.valorEntrada.replace(/\D/g, '')) / 100 || 0;
       if (valorCompra > 0 && valorEntrada > 0) {
-        newData.valorFinanciado = (valorCompra - valorEntrada).toString();
+        const valorFinanciado = valorCompra - valorEntrada;
+        newData.valorFinanciado = (valorFinanciado * 100).toString();
+      }
+    }
+
+    // Cálculo automático de parcela ou prazo
+    if (field === 'prazoFinanciamento' || field === 'percentualJuros' || field === 'valorFinanciado') {
+      const valorFinanciado = parseFloat(newData.valorFinanciado) / 100 || 0;
+      const juros = parseFloat(newData.percentualJuros) / 100 / 12 || 0;
+      const prazo = parseFloat(newData.prazoFinanciamento) || 0;
+      
+      if (valorFinanciado > 0 && juros > 0 && prazo > 0) {
+        const parcela = valorFinanciado * (juros * Math.pow(1 + juros, prazo)) / (Math.pow(1 + juros, prazo) - 1);
+        newData.valorParcela = (parcela * 100).toString();
+      }
+    }
+
+    if (field === 'valorParcela' && newData.valorFinanciado && newData.percentualJuros) {
+      const valorFinanciado = parseFloat(newData.valorFinanciado) / 100 || 0;
+      const juros = parseFloat(newData.percentualJuros) / 100 / 12 || 0;
+      const parcela = parseFloat(newData.valorParcela.replace(/\D/g, '')) / 100 || 0;
+      
+      if (valorFinanciado > 0 && juros > 0 && parcela > 0) {
+        const prazo = Math.log(1 + (valorFinanciado * juros) / parcela) / Math.log(1 + juros);
+        newData.prazoFinanciamento = Math.round(prazo).toString();
       }
     }
     
     setData(newData);
   };
 
-  const valorCompraNum = parseFloat(data.valorCompra) || 0;
-  const valorEntradaNum = parseFloat(data.valorEntrada) || 0;
-  const valorFinanciadoNum = parseFloat(data.valorFinanciado) || 0;
-  const parcelaNum = parseFloat(data.valorParcela) || 0;
+  const handleCurrencyInput = (field: keyof PropertyData, value: string) => {
+    const formatted = formatInputCurrency(value);
+    updateData(field, value.replace(/\D/g, ''));
+  };
+
+  const getCurrencyDisplayValue = (value: string) => {
+    if (!value) return '';
+    const amount = parseFloat(value) / 100;
+    return amount.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  const valorCompraNum = parseFloat(data.valorCompra) / 100 || 0;
+  const valorEntradaNum = parseFloat(data.valorEntrada) / 100 || 0;
+  const valorFinanciadoNum = parseFloat(data.valorFinanciado) / 100 || 0;
+  const parcelaNum = parseFloat(data.valorParcela) / 100 || 0;
 
   return (
     <Card className="bg-gradient-card border-border/50 shadow-xl animate-fade-in">
@@ -90,17 +149,17 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
       </CardHeader>
       
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="cidade" className="text-foreground font-medium">Cidade</Label>
-            <Select value={data.cidade} onValueChange={(value) => updateData('cidade', value)}>
+            <Label htmlFor="estado" className="text-foreground font-medium">Estado</Label>
+            <Select value={data.estado} onValueChange={(value) => updateData('estado', value)}>
               <SelectTrigger className="bg-background/50 border-border/50">
-                <SelectValue placeholder="Selecione a cidade" />
+                <SelectValue placeholder="Selecione o estado" />
               </SelectTrigger>
               <SelectContent>
-                {cidades.map((cidade) => (
-                  <SelectItem key={cidade.nome} value={cidade.nome}>
-                    {cidade.nome}
+                {Object.keys(estadosCidades).map((estado) => (
+                  <SelectItem key={estado} value={estado}>
+                    {estado}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -108,13 +167,19 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground font-medium">Estado</Label>
-            <Input
-              value={data.estado}
-              readOnly
-              className="bg-muted/50 border-border/50"
-              placeholder="UF"
-            />
+            <Label htmlFor="cidade" className="text-foreground font-medium">Cidade</Label>
+            <Select value={data.cidade} onValueChange={(value) => updateData('cidade', value)} disabled={!data.estado}>
+              <SelectTrigger className="bg-background/50 border-border/50">
+                <SelectValue placeholder="Selecione a cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {cidadesFiltradas.map((cidade) => (
+                  <SelectItem key={cidade} value={cidade}>
+                    {cidade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -149,25 +214,10 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
             <Label htmlFor="valorCompra" className="text-foreground font-medium">Valor de Compra (R$)</Label>
             <Input
               id="valorCompra"
-              type="number"
-              placeholder="350000"
-              value={data.valorCompra}
-              onChange={(e) => updateData('valorCompra', e.target.value)}
-              className="bg-background/50 border-border/50"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="valorEntrada" className="text-foreground font-medium">
-              Valor da Entrada (R$)
-              <span className="text-xs text-muted-foreground block">Min. 20% para financiamento</span>
-            </Label>
-            <Input
-              id="valorEntrada"
-              type="number"
-              placeholder="70000"
-              value={data.valorEntrada}
-              onChange={(e) => updateData('valorEntrada', e.target.value)}
+              type="text"
+              placeholder="350.000,00"
+              value={getCurrencyDisplayValue(data.valorCompra)}
+              onChange={(e) => handleCurrencyInput('valorCompra', e.target.value)}
               className="bg-background/50 border-border/50"
             />
           </div>
@@ -188,11 +238,26 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
           {data.financiamento === 'sim' && (
             <>
               <div className="space-y-2">
+                <Label htmlFor="valorEntrada" className="text-foreground font-medium">
+                  Valor da Entrada (R$)
+                  <span className="text-xs text-muted-foreground block">Financiamentos exigem mín. 20% do valor</span>
+                </Label>
+                <Input
+                  id="valorEntrada"
+                  type="text"
+                  placeholder="70.000,00"
+                  value={getCurrencyDisplayValue(data.valorEntrada)}
+                  onChange={(e) => handleCurrencyInput('valorEntrada', e.target.value)}
+                  className="bg-background/50 border-border/50"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label className="text-foreground font-medium">Valor Financiado (R$)</Label>
                 <Input
-                  value={data.valorFinanciado}
-                  onChange={(e) => updateData('valorFinanciado', e.target.value)}
-                  className="bg-background/50 border-border/50"
+                  value={getCurrencyDisplayValue(data.valorFinanciado)}
+                  readOnly
+                  className="bg-muted/50 border-border/50"
                 />
               </div>
 
@@ -204,7 +269,6 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
                   id="percentualJuros"
                   type="number"
                   step="0.1"
-                  placeholder="10.5"
                   value={data.percentualJuros}
                   onChange={(e) => updateData('percentualJuros', e.target.value)}
                   className="bg-background/50 border-border/50"
@@ -227,10 +291,10 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
                 <Label htmlFor="valorParcela" className="text-foreground font-medium">Valor da Parcela (R$)</Label>
                 <Input
                   id="valorParcela"
-                  type="number"
-                  placeholder="2500"
-                  value={data.valorParcela}
-                  onChange={(e) => updateData('valorParcela', e.target.value)}
+                  type="text"
+                  placeholder="2.500,00"
+                  value={getCurrencyDisplayValue(data.valorParcela)}
+                  onChange={(e) => handleCurrencyInput('valorParcela', e.target.value)}
                   className="bg-background/50 border-border/50"
                 />
               </div>
@@ -253,22 +317,22 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
             <Label htmlFor="reformaMobilia" className="text-foreground font-medium">Reforma/Mobília (R$) - Opcional</Label>
             <Input
               id="reformaMobilia"
-              type="number"
-              placeholder="0"
-              value={data.reformaMobilia}
-              onChange={(e) => updateData('reformaMobilia', e.target.value)}
+              type="text"
+              placeholder="0,00"
+              value={getCurrencyDisplayValue(data.reformaMobilia)}
+              onChange={(e) => handleCurrencyInput('reformaMobilia', e.target.value)}
               className="bg-background/50 border-border/50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="outrasDespesas" className="text-foreground font-medium">Outras Despesas (R$)</Label>
+            <Label htmlFor="outrasDespesas" className="text-foreground font-medium">Opcional - Outras Despesas (R$)</Label>
             <Input
               id="outrasDespesas"
-              type="number"
-              placeholder="0"
-              value={data.outrasDespesas}
-              onChange={(e) => updateData('outrasDespesas', e.target.value)}
+              type="text"
+              placeholder="0,00"
+              value={getCurrencyDisplayValue(data.outrasDespesas)}
+              onChange={(e) => handleCurrencyInput('outrasDespesas', e.target.value)}
               className="bg-background/50 border-border/50"
             />
           </div>
@@ -296,14 +360,6 @@ export function PropertySimulatorCard({ data, setData, onCalculate }: PropertySi
             </div>
           </div>
         </div>
-
-        <Button 
-          onClick={onCalculate}
-          className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold py-3"
-        >
-          <Calculator className="w-5 h-5 mr-2" />
-          Calcular Análise
-        </Button>
       </CardContent>
     </Card>
   );

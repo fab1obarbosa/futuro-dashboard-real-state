@@ -1,6 +1,6 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Target, TrendingUp, DollarSign, Home } from "lucide-react";
+import { Target, TrendingUp, DollarSign, Home, Calculator } from "lucide-react";
 
 interface PropertyData {
   valorCompra: string;
@@ -10,6 +10,8 @@ interface PropertyData {
   reformaMobilia: string;
   outrasDespesas: string;
   taxaCartorio: string;
+  prazoFinanciamento: string;
+  percentualJuros: string;
 }
 
 interface RevenueData {
@@ -34,34 +36,46 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   };
 
   // Cálculos
-  const valorCompra = parseFloat(propertyData.valorCompra) || 0;
-  const valorEntrada = parseFloat(propertyData.valorEntrada) || 0;
-  const reforma = parseFloat(propertyData.reformaMobilia) || 0;
-  const outrasDespesas = parseFloat(propertyData.outrasDespesas) || 0;
+  const valorCompra = parseFloat(propertyData.valorCompra) / 100 || 0;
+  const valorEntrada = parseFloat(propertyData.valorEntrada) / 100 || 0;
+  const valorFinanciado = parseFloat(propertyData.valorFinanciado) / 100 || 0;
+  const reforma = parseFloat(propertyData.reformaMobilia) / 100 || 0;
+  const outrasDespesas = parseFloat(propertyData.outrasDespesas) / 100 || 0;
   const taxaCartorio = (parseFloat(propertyData.taxaCartorio) || 0) / 100;
+  const prazoFinanciamento = parseFloat(propertyData.prazoFinanciamento) || 0;
+  const jurosAnual = parseFloat(propertyData.percentualJuros) || 0;
   
   const custoCartorio = valorCompra * taxaCartorio;
-  const custoTotalInvestimento = valorEntrada + reforma + outrasDespesas + custoCartorio;
+  const valorParcela = parseFloat(propertyData.valorParcela) / 100 || 0;
+  const totalJurosFinanciamento = (valorParcela * prazoFinanciamento) - valorFinanciado;
+  const custoTotalInvestimento = valorCompra + totalJurosFinanciamento + reforma + outrasDespesas + custoCartorio;
   
-  const aluguelBruto = parseFloat(revenueData.aluguelMensal) || 0;
-  const condominio = parseFloat(revenueData.condominio) || 0;
-  const iptu = parseFloat(revenueData.iptu) || 0;
-  const despesasFixas = parseFloat(revenueData.despesasFixas) || 0;
+  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || 0;
+  const condominio = parseFloat(revenueData.condominio) / 100 || 0;
+  const iptu = parseFloat(revenueData.iptu) / 100 || 0;
+  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || 0;
   const vacanciaPerc = parseFloat(revenueData.vacanciaMedia) || 0;
   
-  const despesasMensais = condominio + iptu + despesasFixas;
+  const custosMensais = valorParcela + condominio + iptu + despesasFixas;
   const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
-  const receitaLiquidaMensal = aluguelBruto - despesasMensais - vacanciaEstimada;
+  const receitaLiquidaMensal = aluguelBruto - vacanciaEstimada;
   const receitaLiquidaAnual = receitaLiquidaMensal * 12;
+  const resultadoMensal = receitaLiquidaMensal - custosMensais;
   
-  const roi = custoTotalInvestimento > 0 ? (receitaLiquidaAnual / custoTotalInvestimento) * 100 : 0;
-  const paybackMeses = receitaLiquidaMensal > 0 ? custoTotalInvestimento / receitaLiquidaMensal : 0;
+  const roiMensal = custoTotalInvestimento > 0 ? (resultadoMensal / custoTotalInvestimento) * 100 : 0;
+  const roiAnual = roiMensal * 12;
+  const paybackMeses = resultadoMensal > 0 ? custoTotalInvestimento / resultadoMensal : 0;
+  
+  // Valorização anual estimada (5% ao ano)
+  const valorizacaoAnual = 5;
+  const valorFuturoImovel = valorCompra * Math.pow(1 + valorizacaoAnual / 100, 1);
+  const ganhoValorizacao = valorFuturoImovel - valorCompra;
   
   // Comparativos (valores aproximados)
   const cdiAnual = 11.75; // CDI atual aproximado
   const poupancaAnual = 6.17; // Poupança atual aproximada
   
-  const melhorQueInvestimentos = roi > cdiAnual && roi > poupancaAnual;
+  const melhorQueInvestimentos = roiAnual > cdiAnual && roiAnual > poupancaAnual;
 
   const analysisItems = [
     {
@@ -72,18 +86,18 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       bgColor: "bg-primary/10"
     },
     {
-      title: "ROI Anual",
-      value: `${roi.toFixed(2)}%`,
-      icon: TrendingUp,
-      color: "text-accent",
-      bgColor: "bg-accent/10"
+      title: "Custos Mensais",
+      value: formatCurrency(custosMensais),
+      icon: Calculator,
+      color: "text-destructive",
+      bgColor: "bg-destructive/10"
     },
     {
       title: "Receita Líquida Mensal",
       value: formatCurrency(receitaLiquidaMensal),
       icon: DollarSign,
-      color: "text-primary",
-      bgColor: "bg-primary/10"
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     },
     {
       title: "Receita Líquida Anual",
@@ -93,11 +107,39 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       bgColor: "bg-accent/10"
     },
     {
+      title: "ROI Mensal",
+      value: `${roiMensal.toFixed(2)}%`,
+      icon: TrendingUp,
+      color: "text-primary",
+      bgColor: "bg-primary/10"
+    },
+    {
+      title: "ROI Anual",
+      value: `${roiAnual.toFixed(2)}%`,
+      icon: TrendingUp,
+      color: "text-primary",
+      bgColor: "bg-primary/10"
+    },
+    {
+      title: "Resultado Mensal Final",
+      value: formatCurrency(resultadoMensal),
+      icon: Target,
+      color: resultadoMensal > 0 ? "text-accent" : "text-destructive",
+      bgColor: resultadoMensal > 0 ? "bg-accent/10" : "bg-destructive/10"
+    },
+    {
       title: "Payback Estimado",
       value: `${paybackMeses.toFixed(0)} meses (${(paybackMeses/12).toFixed(1)} anos)`,
       icon: Home,
       color: "text-primary",
       bgColor: "bg-primary/10"
+    },
+    {
+      title: "Valorização Anual",
+      value: `${valorizacaoAnual}% (${formatCurrency(ganhoValorizacao)})`,
+      icon: TrendingUp,
+      color: "text-accent",
+      bgColor: "bg-accent/10"
     }
   ];
 
@@ -126,7 +168,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
                 </div>
                 <span className="text-sm font-medium text-muted-foreground">{item.title}</span>
               </div>
-              <div className={`text-xl font-bold ${item.color}`}>
+              <div className={`text-lg font-bold ${item.color}`}>
                 {item.value}
               </div>
             </div>
@@ -139,7 +181,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="text-center">
               <span className="text-muted-foreground">Imóvel (ROI)</span>
-              <p className="font-bold text-xl text-primary">{roi.toFixed(2)}%</p>
+              <p className="font-bold text-xl text-primary">{roiAnual.toFixed(2)}%</p>
             </div>
             <div className="text-center">
               <span className="text-muted-foreground">CDI</span>

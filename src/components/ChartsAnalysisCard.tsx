@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 interface PropertyData {
   valorCompra: string;
   valorEntrada: string;
+  valorParcela: string;
+  prazoFinanciamento: string;
 }
 
 interface RevenueData {
@@ -33,43 +35,51 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
   };
 
   // Cálculos para os gráficos
-  const aluguelBruto = parseFloat(revenueData.aluguelMensal) || 0;
-  const despesasMensais = (parseFloat(revenueData.condominio) || 0) + 
-                         (parseFloat(revenueData.iptu) || 0) + 
-                         (parseFloat(revenueData.despesasFixas) || 0);
+  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || 0;
+  const valorParcela = parseFloat(propertyData.valorParcela) / 100 || 0;
+  const condominio = parseFloat(revenueData.condominio) / 100 || 0;
+  const iptu = parseFloat(revenueData.iptu) / 100 || 0;
+  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || 0;
   
-  // Dados para gráfico de evolução patrimonial (5 anos)
-  const evolutionData = Array.from({ length: 6 }, (_, i) => ({
-    ano: i,
-    receita: aluguelBruto * 12 * i,
-    despesas: despesasMensais * 12 * i,
-    lucroLiquido: (aluguelBruto - despesasMensais) * 12 * i
-  }));
+  const despesasTotais = valorParcela + condominio + iptu + despesasFixas;
+  const receitaLiquida = aluguelBruto - despesasTotais;
+  
+  const roiMensal = 0.71;
+  const roiAnual = 8.5;
+  
+  // Sinalização baseada no ROI
+  const getSemaforo = (roi: number) => {
+    if (roi >= 12) return { cor: "bg-green-500", texto: "Viável", emoji: "✅" };
+    if (roi >= 8) return { cor: "bg-yellow-500", texto: "Arriscado", emoji: "⚠️" };
+    return { cor: "bg-red-500", texto: "Não Viável", emoji: "❌" };
+  };
+
+  const semaforo = getSemaforo(roiAnual);
 
   // Dados para gráfico de receitas vs despesas
   const revenueVsExpenses = [
     { categoria: 'Receita Bruta', valor: aluguelBruto, fill: 'hsl(var(--primary))' },
-    { categoria: 'Despesas', valor: despesasMensais, fill: 'hsl(var(--destructive))' },
-    { categoria: 'Receita Líquida', valor: aluguelBruto - despesasMensais, fill: 'hsl(var(--accent))' }
+    { categoria: 'Despesas', valor: despesasTotais, fill: 'hsl(var(--destructive))' }
   ];
 
   // Dados para comparativo de investimentos
   const investmentComparison = [
-    { tipo: 'Imóvel', rentabilidade: 8.5, fill: 'hsl(var(--primary))' },
+    { tipo: 'Imóvel', rentabilidade: roiAnual, fill: 'hsl(var(--primary))' },
     { tipo: 'CDI', rentabilidade: 11.75, fill: 'hsl(var(--accent))' },
     { tipo: 'Poupança', rentabilidade: 6.17, fill: 'hsl(var(--muted))' }
   ];
 
-  // Dados para composição dos ganhos
-  const gainsComposition = [
-    { name: 'Aluguel', value: 70, fill: 'hsl(var(--primary))' },
-    { name: 'Valorização', value: 30, fill: 'hsl(var(--accent))' }
-  ];
+  // Dados para aluguel vs revenda (10 anos)
+  const aluguelVsRevenda = Array.from({ length: 11 }, (_, i) => ({
+    ano: i,
+    aluguel: aluguelBruto * 12 * i,
+    revenda: i === 10 ? parseFloat(propertyData.valorCompra) / 100 * 1.5 : 0, // 50% valorização em 10 anos
+    patrimonio: (aluguelBruto * 12 * i) + (i === 10 ? parseFloat(propertyData.valorCompra) / 100 * 0.5 : 0)
+  }));
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
   const handleDownloadReport = () => {
-    // Função para gerar relatório em PDF (implementação simulada)
     window.print();
   };
 
@@ -93,18 +103,18 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
               <h3 className="text-sm text-muted-foreground mb-2">ROI Mensal</h3>
-              <p className="text-2xl font-bold text-primary">0.71%</p>
+              <p className="text-2xl font-bold text-primary">{roiMensal}%</p>
             </div>
             <div>
               <h3 className="text-sm text-muted-foreground mb-2">ROI Anual</h3>
-              <p className="text-2xl font-bold text-primary">8.5%</p>
+              <p className="text-2xl font-bold text-primary">{roiAnual}%</p>
             </div>
             <div>
               <h3 className="text-sm text-muted-foreground mb-2">Sinalização</h3>
-              <div className="w-16 h-16 mx-auto rounded-full bg-yellow-500 flex items-center justify-center">
-                <span className="text-white font-bold">⚠️</span>
+              <div className={`w-16 h-16 mx-auto rounded-full ${semaforo.cor} flex items-center justify-center`}>
+                <span className="text-white text-2xl">{semaforo.emoji}</span>
               </div>
-              <p className="text-sm mt-2 text-yellow-600">Arriscado</p>
+              <p className="text-sm mt-2 font-medium">{semaforo.texto}</p>
             </div>
           </div>
         </CardContent>
@@ -119,7 +129,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueVsExpenses}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -139,7 +149,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
           <CardTitle>Comparativo de Investimentos (%)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={investmentComparison}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -153,82 +163,105 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         </CardContent>
       </Card>
 
-      {/* Composição dos Ganhos */}
+      {/* Evolução Patrimonial - Aluguel vs Revenda */}
       <Card className="bg-gradient-card border-border/50 shadow-xl">
         <CardHeader>
-          <CardTitle>Composição dos Ganhos</CardTitle>
+          <CardTitle>Retorno: Aluguel vs Revenda (10 anos)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={gainsComposition}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {gainsComposition.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Evolução Patrimonial */}
-      <Card className="bg-gradient-card border-border/50 shadow-xl">
-        <CardHeader>
-          <CardTitle>Evolução Patrimonial</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={evolutionData}>
+              <LineChart data={aluguelVsRevenda}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" />
                 <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Line type="monotone" dataKey="receita" stroke="hsl(var(--primary))" strokeWidth={2} />
-                <Line type="monotone" dataKey="despesas" stroke="hsl(var(--destructive))" strokeWidth={2} />
-                <Line type="monotone" dataKey="lucroLiquido" stroke="hsl(var(--accent))" strokeWidth={2} />
+                <Line 
+                  type="monotone" 
+                  dataKey="aluguel" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={3}
+                  name="Receita Aluguel"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenda" 
+                  stroke="hsl(var(--accent))" 
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  name="Ganho Revenda"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="patrimonio" 
+                  stroke="hsl(var(--yellow-primary))" 
+                  strokeWidth={3}
+                  name="Patrimônio Total"
+                />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+          <div className="mt-4 flex justify-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-1 bg-primary"></div>
+              <span>Receita Aluguel</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-1 bg-accent" style={{backgroundImage: 'repeating-linear-gradient(to right, hsl(var(--accent)) 0, hsl(var(--accent)) 5px, transparent 5px, transparent 10px)'}}></div>
+              <span>Ganho Revenda</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-1 bg-yellow-primary"></div>
+              <span>Patrimônio Total</span>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Resumo Final */}
-      <Card className="bg-gradient-primary/10 border-primary/20 shadow-xl">
+      <Card className="bg-gradient-to-br from-primary/20 via-accent/20 to-yellow-primary/20 border-primary/30 shadow-2xl">
         <CardHeader>
-          <CardTitle>Resumo Final da Análise</CardTitle>
+          <CardTitle className="text-center text-xl">🏠 Resumo Final da Análise</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold mb-3">Indicadores Principais</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• ROI Anual: <span className="font-semibold">8.5%</span></li>
-                <li>• Payback: <span className="font-semibold">140 meses</span></li>
-                <li>• Receita Líquida: <span className="font-semibold">{formatCurrency(aluguelBruto - despesasMensais)}/mês</span></li>
-                <li>• Risco Geral: <span className="font-semibold">Médio</span></li>
-              </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-primary mb-4">📊 Indicadores Principais</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">💰 ROI Anual:</span>
+                  <span className="font-bold text-xl text-primary">{roiAnual}%</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">⏱️ Payback:</span>
+                  <span className="font-bold text-xl text-accent">140 meses</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">💵 Receita Líquida:</span>
+                  <span className="font-bold text-xl text-primary">{formatCurrency(receitaLiquida)}/mês</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">⚠️ Risco Geral:</span>
+                  <span className="font-bold text-xl text-yellow-600">Médio</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold mb-3">Recomendações</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• Considere renegociar o valor de compra</li>
-                <li>• Avalie outras opções na região</li>
-                <li>• Compare com outros investimentos</li>
-                <li>• Monitore o mercado imobiliário local</li>
-              </ul>
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-accent mb-4">💡 Recomendações</h3>
+              <div className="space-y-3">
+                <div className="p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">🔄 Considere renegociar o valor de compra</span>
+                </div>
+                <div className="p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">🏘️ Avalie outras opções na região</span>
+                </div>
+                <div className="p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">📈 Compare com outros investimentos</span>
+                </div>
+                <div className="p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground">📊 Monitore o mercado imobiliário local</span>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

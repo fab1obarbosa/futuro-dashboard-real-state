@@ -9,13 +9,13 @@ import { ChartsAnalysisCard } from "@/components/ChartsAnalysisCard";
 import { useToast } from "@/hooks/use-toast";
 
 interface PropertyData {
-  cidade: string;
   estado: string;
+  cidade: string;
   tipo: string;
   finalidade: string;
   valorCompra: string;
-  valorEntrada: string;
   financiamento: string;
+  valorEntrada: string;
   valorFinanciado: string;
   percentualJuros: string;
   prazoFinanciamento: string;
@@ -36,13 +36,13 @@ interface RevenueData {
 const Index = () => {
   const { toast } = useToast();
   const [propertyData, setPropertyData] = useState<PropertyData>({
-    cidade: "",
     estado: "",
+    cidade: "",
     tipo: "",
     finalidade: "",
     valorCompra: "",
-    valorEntrada: "",
     financiamento: "nao",
+    valorEntrada: "",
     valorFinanciado: "",
     percentualJuros: "",
     prazoFinanciamento: "",
@@ -63,10 +63,10 @@ const Index = () => {
   const [isCalculated, setIsCalculated] = useState(false);
 
   const calculateAnalysis = () => {
-    if (!propertyData.valorCompra || !propertyData.valorEntrada) {
+    if (!propertyData.valorCompra || !revenueData.aluguelMensal) {
       toast({
         title: "Dados incompletos",
-        description: "Preencha pelo menos o valor de compra e entrada do imóvel.",
+        description: "Preencha pelo menos o valor de compra do imóvel e o aluguel mensal.",
         variant: "destructive",
       });
       return;
@@ -81,13 +81,13 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-6 px-4">
         {/* Header */}
         <div className="text-center space-y-4 animate-fade-in">
-          <h1 className="text-4xl lg:text-5xl font-bold text-foreground">
-            Simulador de <span className="text-background bg-yellow-primary px-2 py-1 rounded">Imóveis</span>
+          <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
+            Simulador de <span className="bg-yellow-primary text-black px-2 py-1 rounded font-bold">Investimentos</span> Imobiliários
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Analise a rentabilidade dos seus investimentos imobiliários e descubra o potencial de retorno em aluguel e revenda.
           </p>
         </div>
@@ -96,7 +96,6 @@ const Index = () => {
         <PropertySimulatorCard 
           data={propertyData}
           setData={setPropertyData}
-          onCalculate={calculateAnalysis}
         />
 
         {/* Receita Projetada */}
@@ -104,6 +103,7 @@ const Index = () => {
           data={revenueData}
           setData={setRevenueData}
           propertyData={propertyData}
+          onCalculate={calculateAnalysis}
         />
 
         {/* Análise do Imóvel */}
@@ -131,9 +131,10 @@ const Index = () => {
         )}
 
         {/* Footer */}
-        <footer className="mt-16 py-8 border-t border-border/50 text-center">
-          <h3 className="text-xl font-bold text-foreground mb-2">Construa seu Futuro</h3>
-          <p className="text-sm text-muted-foreground">Todos os Direitos Reservados</p>
+        <footer className="mt-12 py-4 border-t border-border/30 text-center">
+          <p className="text-xs text-muted-foreground">
+            <span className="font-semibold">Construa seu Futuro</span> - Todos os Direitos Reservados
+          </p>
         </footer>
       </div>
     </Layout>
