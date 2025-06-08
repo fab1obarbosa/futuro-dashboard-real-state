@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, Calculator } from "lucide-react";
 
 interface PropertyData {
@@ -19,6 +20,7 @@ interface RevenueData {
   iptu: string;
   despesasFixas: string;
   aportesMensais: string;
+  inquilinoPagaCustos: string;
 }
 
 interface RevenueProjectionCardProps {
@@ -61,14 +63,14 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
     }
   };
 
-  // Usar valores padrão quando não preenchidos
-  const aluguelBruto = parseFloat(data.aluguelMensal) / 100 || (parseFloat(propertyData.valorCompra) / 100 * 0.006);
-  const condominio = parseFloat(data.condominio) / 100 || (aluguelBruto * 0.1);
-  const iptu = parseFloat(data.iptu) / 100 || (parseFloat(propertyData.valorCompra) / 100 * 0.01 / 12);
-  const despesasFixas = parseFloat(data.despesasFixas) / 100 || (aluguelBruto * 0.08);
+  // Cálculos para o resumo usando apenas valores preenchidos
+  const aluguelBruto = parseFloat(data.aluguelMensal) / 100 || 0;
+  const condominio = parseFloat(data.condominio) / 100 || 0;
+  const iptu = parseFloat(data.iptu) / 100 || 0;
+  const despesasFixas = parseFloat(data.despesasFixas) / 100 || 0;
   const vacanciaPerc = parseFloat(data.vacanciaMedia) || 8.0;
   
-  const despesasMensais = condominio + iptu + despesasFixas;
+  const despesasMensais = data.inquilinoPagaCustos === "sim" ? 0 : (condominio + iptu + despesasFixas);
   const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
   const receitaLiquida = aluguelBruto - despesasMensais - vacanciaEstimada;
 
@@ -103,6 +105,7 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
                 variant="outline"
                 size="sm"
                 className="px-3"
+                title="Estimar valor baseado em 0,6% do valor do imóvel"
               >
                 <Calculator className="w-4 h-4" />
               </Button>
@@ -119,6 +122,21 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
               onChange={(e) => updateData('vacanciaMedia', e.target.value)}
               className="bg-background/50 border-border/50"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="inquilinoPagaCustos" className="text-foreground font-medium">
+              Inquilino Paga Custos Separadamente?
+            </Label>
+            <Select value={data.inquilinoPagaCustos} onValueChange={(value) => updateData('inquilinoPagaCustos', value)}>
+              <SelectTrigger className="bg-background/50 border-border/50">
+                <SelectValue placeholder="Sim/Não" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sim">Sim - Inquilino paga à parte</SelectItem>
+                <SelectItem value="nao">Não - Descontar do aluguel</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -191,11 +209,11 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
             </div>
             <div>
               <span className="text-muted-foreground">Despesas Mensais:</span>
-              <p className="font-semibold text-red-400">{formatCurrency(despesasMensais)}</p>
+              <p className="font-semibold text-red-highlight">{formatCurrency(despesasMensais)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Vacância Estimada:</span>
-              <p className="font-semibold text-red-400">{formatCurrency(vacanciaEstimada)}</p>
+              <p className="font-semibold text-red-highlight">{formatCurrency(vacanciaEstimada)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Receita Líquida:</span>
@@ -203,7 +221,10 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
             </div>
           </div>
           <div className="mt-2 text-xs text-muted-foreground">
-            *Despesas incluem: Condomínio ({formatCurrency(condominio)}), IPTU ({formatCurrency(iptu)}), Despesas Fixas ({formatCurrency(despesasFixas)})
+            *{data.inquilinoPagaCustos === "sim" ? 
+              "Custos serão pagos pelo inquilino separadamente" : 
+              `Despesas incluem: Condomínio (${formatCurrency(condominio)}), IPTU (${formatCurrency(iptu)}), Despesas Fixas (${formatCurrency(despesasFixas)})`
+            }
           </div>
         </div>
       </CardContent>

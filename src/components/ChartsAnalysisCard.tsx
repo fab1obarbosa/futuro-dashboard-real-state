@@ -1,6 +1,6 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
 import { BarChart3, Download, TrendingUp, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,10 @@ interface PropertyData {
   valorEntrada: string;
   valorParcela: string;
   prazoFinanciamento: string;
+  valorFinanciado: string;
+  reformaMobilia: string;
+  outrasDespesas: string;
+  taxaCartorio: string;
 }
 
 interface RevenueData {
@@ -17,6 +21,7 @@ interface RevenueData {
   condominio: string;
   iptu: string;
   despesasFixas: string;
+  inquilinoPagaCustos: string;
 }
 
 interface ChartsAnalysisCardProps {
@@ -34,19 +39,26 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
     }).format(value);
   };
 
-  // Cálculos para os gráficos
+  // Cálculos corrigidos baseados nos dados reais
   const valorCompra = parseFloat(propertyData.valorCompra) / 100 || 0;
-  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || (valorCompra * 0.006);
+  const valorEntrada = parseFloat(propertyData.valorEntrada) / 100 || 0;
+  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || 0;
   const valorParcela = parseFloat(propertyData.valorParcela) / 100 || 0;
-  const condominio = parseFloat(revenueData.condominio) / 100 || (aluguelBruto * 0.1);
-  const iptu = parseFloat(revenueData.iptu) / 100 || (valorCompra * 0.01 / 12);
-  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || (aluguelBruto * 0.08);
+  const condominio = parseFloat(revenueData.condominio) / 100 || 0;
+  const iptu = parseFloat(revenueData.iptu) / 100 || 0;
+  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || 0;
+  const reforma = parseFloat(propertyData.reformaMobilia) / 100 || 0;
+  const outrasDespesas = parseFloat(propertyData.outrasDespesas) / 100 || 0;
   
-  const despesasTotais = valorParcela + condominio + iptu + despesasFixas;
-  const receitaLiquida = aluguelBruto - despesasTotais;
+  // Cálculos de custos
+  const custosDescontadosAluguel = revenueData.inquilinoPagaCustos === "sim" ? 0 : (condominio + iptu + despesasFixas);
+  const vacanciaPerc = parseFloat(revenueData.vacanciaMedia) || 8.0;
+  const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
+  const receitaLiquida = aluguelBruto - custosDescontadosAluguel - vacanciaEstimada;
   
-  const roiMensal = 0.71;
-  const roiAnual = 8.5;
+  // ROI corrigido
+  const roiMensal = valorCompra > 0 ? (receitaLiquida / valorCompra) * 100 : 0;
+  const roiAnual = roiMensal * 12;
   
   // Sinalização baseada no ROI
   const getSemaforo = (roi: number) => {
@@ -60,7 +72,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
   // Dados para gráfico de pizza - receitas vs despesas
   const pieData = [
     { name: 'Receita Líquida', value: Math.max(0, receitaLiquida), fill: 'hsl(var(--primary))' },
-    { name: 'Despesas Totais', value: despesasTotais, fill: 'hsl(var(--destructive))' }
+    { name: 'Custos do Financiamento', value: valorParcela, fill: 'hsl(var(--destructive))' }
   ];
 
   // Dados para comparativo de investimentos (pizza)
@@ -73,23 +85,74 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
   // Evolução patrimonial - aluguel vs revenda (10 anos)
   const evolutionData = Array.from({ length: 11 }, (_, i) => ({
     ano: i,
-    aluguelAcumulado: (aluguelBruto - despesasTotais) * 12 * i,
-    valorizacaoImovel: valorCompra * Math.pow(1.05, i) - valorCompra,
-    patrimonioTotal: ((aluguelBruto - despesasTotais) * 12 * i) + (valorCompra * Math.pow(1.05, i) - valorCompra)
+    aluguelAcumulado: receitaLiquida * 12 * i,
+    valorizacaoImovel: valorCompra * Math.pow(1.05, i),
+    patrimonioTotal: (receitaLiquida * 12 * i) + (valorCompra * Math.pow(1.05, i))
   }));
 
   // Gráfico de rentabilidade mensal
   const rentabilidadeData = Array.from({ length: 12 }, (_, i) => ({
     mes: `Mês ${i + 1}`,
     receita: aluguelBruto,
-    despesas: despesasTotais,
-    lucro: aluguelBruto - despesasTotais
+    vacancia: vacanciaEstimada,
+    custosInquilino: custosDescontadosAluguel,
+    receitaLiquida: receitaLiquida
+  }));
+
+  // Gráfico de valorização do imóvel para revenda
+  const valorizacaoData = Array.from({ length: 11 }, (_, i) => ({
+    ano: i,
+    valorImovel: valorCompra * Math.pow(1.05, i),
+    ganhoValorizacao: (valorCompra * Math.pow(1.05, i)) - valorCompra
   }));
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--destructive))', 'hsl(var(--yellow-primary))'];
 
-  const handleDownloadReport = () => {
-    window.print();
+  const generatePDFReport = () => {
+    const reportData = {
+      propertyData,
+      revenueData,
+      calculations: {
+        valorCompra,
+        receitaLiquida,
+        roiAnual,
+        valorParcela,
+        payback: valorCompra / (receitaLiquida * 12)
+      }
+    };
+    
+    // Criar dados estruturados para o relatório
+    const reportContent = `
+RELATÓRIO DE ANÁLISE DE INVESTIMENTO IMOBILIÁRIO
+
+DADOS DO IMÓVEL:
+- Localização: ${propertyData.estado} - ${propertyData.cidade}
+- Tipo: ${propertyData.tipo}
+- Valor de Compra: ${formatCurrency(valorCompra)}
+- Valor da Entrada: ${formatCurrency(valorEntrada)}
+- Valor Financiado: ${formatCurrency(parseFloat(propertyData.valorFinanciado) / 100)}
+
+ANÁLISE FINANCEIRA:
+- Aluguel Mensal: ${formatCurrency(aluguelBruto)}
+- Receita Líquida Mensal: ${formatCurrency(receitaLiquida)}
+- ROI Anual: ${roiAnual.toFixed(2)}%
+- Status do Investimento: ${semaforo.texto}
+
+PROJEÇÕES:
+- Retorno em 5 anos: ${formatCurrency(receitaLiquida * 12 * 5)}
+- Valorização estimada em 5 anos: ${formatCurrency(valorCompra * Math.pow(1.05, 5) - valorCompra)}
+`;
+    
+    // Criar blob e download
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `relatorio-investimento-${propertyData.cidade}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -97,7 +160,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       {/* Header com botão de download */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-foreground">Gráficos e Análises</h2>
-        <Button onClick={handleDownloadReport} className="bg-gradient-primary text-sm">
+        <Button onClick={generatePDFReport} className="bg-gradient-primary text-sm">
           <Download className="w-4 h-4 mr-2" />
           Baixar Relatório
         </Button>
@@ -112,11 +175,11 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
               <h3 className="text-xs text-muted-foreground mb-1">ROI Mensal</h3>
-              <p className="text-xl font-bold text-primary">{roiMensal}%</p>
+              <p className="text-xl font-bold text-primary">{roiMensal.toFixed(2)}%</p>
             </div>
             <div>
               <h3 className="text-xs text-muted-foreground mb-1">ROI Anual</h3>
-              <p className="text-xl font-bold text-primary">{roiAnual}%</p>
+              <p className="text-xl font-bold text-primary">{roiAnual.toFixed(2)}%</p>
             </div>
             <div>
               <h3 className="text-xs text-muted-foreground mb-1">Sinalização</h3>
@@ -153,6 +216,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
                     label={({value}) => formatCurrency(value)}
                   />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -162,7 +226,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         {/* Comparativo de Investimentos (Pizza) */}
         <Card className="bg-gradient-card border-border/50 shadow-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Comparativo de Investimentos</CardTitle>
+            <CardTitle className="text-sm">Comparativo de Investimentos (%)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-48">
@@ -174,9 +238,10 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
                     cy="50%"
                     outerRadius={60}
                     dataKey="value"
-                    label={({value}) => `${value}%`}
+                    label={({value}) => `${value.toFixed(1)}%`}
                   />
-                  <Tooltip formatter={(value: number) => `${value}%`} />
+                  <Tooltip formatter={(value: number) => `${value.toFixed(2)}%`} />
+                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -186,7 +251,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         {/* Rentabilidade Mensal */}
         <Card className="bg-gradient-card border-border/50 shadow-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Rentabilidade Mensal</CardTitle>
+            <CardTitle className="text-sm">Rentabilidade Mensal - Fluxo de Caixa</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-48">
@@ -196,29 +261,53 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
                   <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                   <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={10} />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  <Area type="monotone" dataKey="lucro" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                  <Legend />
+                  <Area type="monotone" dataKey="receitaLiquida" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} name="Receita Líquida" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Evolução Patrimonial */}
+        {/* Valorização do Imóvel para Revenda */}
         <Card className="bg-gradient-card border-border/50 shadow-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Evolução Patrimonial (10 anos)</CardTitle>
+            <CardTitle className="text-sm">Valorização do Imóvel (Revenda)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={evolutionData}>
+                <LineChart data={valorizacaoData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" fontSize={10} />
                   <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={10} />
                   <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                  <Line type="monotone" dataKey="aluguelAcumulado" stroke="hsl(var(--primary))" strokeWidth={2} name="Aluguel Acumulado" />
-                  <Line type="monotone" dataKey="valorizacaoImovel" stroke="hsl(var(--accent))" strokeWidth={2} name="Valorização" />
-                  <Line type="monotone" dataKey="patrimonioTotal" stroke="hsl(var(--yellow-primary))" strokeWidth={2} name="Patrimônio Total" />
+                  <Legend />
+                  <Line type="monotone" dataKey="valorImovel" stroke="hsl(var(--accent))" strokeWidth={2} name="Valor do Imóvel" />
+                  <Line type="monotone" dataKey="ganhoValorizacao" stroke="hsl(var(--primary))" strokeWidth={2} name="Ganho por Valorização" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Evolução Patrimonial */}
+        <Card className="bg-gradient-card border-border/50 shadow-lg lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Evolução Patrimonial - Aluguel vs Revenda (10 anos)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={evolutionData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={12} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
+                  <Line type="monotone" dataKey="aluguelAcumulado" stroke="hsl(var(--primary))" strokeWidth={3} name="Aluguel Acumulado" />
+                  <Line type="monotone" dataKey="valorizacaoImovel" stroke="hsl(var(--accent))" strokeWidth={3} name="Valor do Imóvel" />
+                  <Line type="monotone" dataKey="patrimonioTotal" stroke="hsl(var(--yellow-primary))" strokeWidth={3} name="Patrimônio Total" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -242,17 +331,17 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
                 Indicadores Principais
               </h3>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-2 bg-background/50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
                   <span className="text-foreground text-sm">💰 ROI Anual:</span>
-                  <span className="font-bold text-lg text-primary">{roiAnual}%</span>
+                  <span className="font-bold text-lg text-primary">{roiAnual.toFixed(2)}%</span>
                 </div>
-                <div className="flex justify-between items-center p-2 bg-background/50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
                   <span className="text-foreground text-sm">💵 Receita Líquida:</span>
                   <span className="font-bold text-lg text-primary">{formatCurrency(receitaLiquida)}/mês</span>
                 </div>
-                <div className="flex justify-between items-center p-2 bg-background/50 rounded-lg">
+                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
                   <span className="text-foreground text-sm">📊 Status:</span>
-                  <span className={`font-bold text-lg ${semaforo.texto === 'Viável' ? 'text-green-400' : semaforo.texto === 'Arriscado' ? 'text-yellow-400' : 'text-red-300'}`}>
+                  <span className={`font-bold text-lg ${semaforo.texto === 'Viável' ? 'text-green-400' : semaforo.texto === 'Arriscado' ? 'text-yellow-400' : 'text-red-highlight'}`}>
                     {semaforo.texto}
                   </span>
                 </div>
@@ -261,14 +350,17 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
             <div className="space-y-3">
               <h3 className="font-bold text-base text-accent mb-3">💡 Recomendações</h3>
               <div className="space-y-2">
-                <div className="p-2 bg-background/50 rounded-lg">
+                <div className="p-3 bg-background/50 rounded-lg">
                   <span className="text-foreground text-sm">🔄 Considere renegociar o valor de compra</span>
                 </div>
-                <div className="p-2 bg-background/50 rounded-lg">
+                <div className="p-3 bg-background/50 rounded-lg">
                   <span className="text-foreground text-sm">🏘️ Avalie outras opções na região</span>
                 </div>
-                <div className="p-2 bg-background/50 rounded-lg">
+                <div className="p-3 bg-background/50 rounded-lg">
                   <span className="text-foreground text-sm">📈 Compare com outros investimentos</span>
+                </div>
+                <div className="p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-sm">⚠️ Retornos podem variar conforme região</span>
                 </div>
               </div>
             </div>

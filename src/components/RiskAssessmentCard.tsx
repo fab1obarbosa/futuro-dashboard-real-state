@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Shield } from "lucide-react";
@@ -69,7 +70,7 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
   const getInvestmentAdvice = (score: number) => {
     if (score <= 30) return { text: "✅ Excelente investimento! Baixo risco e boa perspectiva de retorno.", color: "text-green-400" };
     if (score <= 60) return { text: "⚠️ Investimento médio. Considere os riscos antes de prosseguir.", color: "text-yellow-400" };
-    return { text: "❌ Investimento arriscado. Recomendamos cautela e reavaliação.", color: "text-red-300" };
+    return { text: "❌ Investimento arriscado. Recomendamos cautela e reavaliação.", color: "text-red-highlight" };
   };
 
   const advice = getInvestmentAdvice(mediaGeral);
@@ -151,6 +152,13 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
           </div>
           <p className={`text-xs font-medium ${advice.color}`}>
             {advice.text}
+          </p>
+        </div>
+
+        {/* Aviso sobre variações */}
+        <div className="mt-4 p-3 bg-gradient-accent/10 rounded-lg border border-accent/20">
+          <p className="text-xs text-muted-foreground">
+            ⚠️ <strong>Importante:</strong> Todo retorno e valorização podem variar de acordo com o bairro e acontecimentos da localização no período, podendo valorizar ou desvalorizar.
           </p>
         </div>
       </CardContent>

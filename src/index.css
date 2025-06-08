@@ -15,7 +15,7 @@
     --popover: 214 32% 12%;
     --popover-foreground: 213 27% 84%;
 
-    --primary: 47 96% 53%;
+    --primary: 51 100% 50%;
     --primary-foreground: 210 30% 8%;
 
     --secondary: 217 32% 17%;
@@ -27,30 +27,31 @@
     --accent: 217 91% 60%;
     --accent-foreground: 210 30% 8%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 0 62% 48%;
     --destructive-foreground: 213 27% 84%;
 
     --border: 217 32% 17%;
     --input: 217 32% 17%;
-    --ring: 47 96% 53%;
+    --ring: 51 100% 50%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 210 30% 8%;
     --sidebar-foreground: 213 27% 84%;
-    --sidebar-primary: 47 96% 53%;
+    --sidebar-primary: 51 100% 50%;
     --sidebar-primary-foreground: 210 30% 8%;
     --sidebar-accent: 217 32% 17%;
     --sidebar-accent-foreground: 213 27% 84%;
     --sidebar-border: 217 32% 17%;
-    --sidebar-ring: 47 96% 53%;
+    --sidebar-ring: 51 100% 50%;
 
     /* Cores customizadas */
     --blue-dark: 210 30% 8%;
     --blue-medium: 217 91% 60%;
     --blue-light: 217 32% 17%;
-    --yellow-primary: 47 96% 53%;
+    --yellow-primary: 51 100% 50%;
     --yellow-secondary: 45 93% 47%;
+    --red-highlight: 0 77% 50%;
   }
 
   .dark {
@@ -60,7 +61,7 @@
     --card-foreground: 213 27% 84%;
     --popover: 214 32% 12%;
     --popover-foreground: 213 27% 84%;
-    --primary: 47 96% 53%;
+    --primary: 51 100% 50%;
     --primary-foreground: 210 30% 8%;
     --secondary: 217 32% 17%;
     --secondary-foreground: 213 27% 84%;
@@ -68,19 +69,19 @@
     --muted-foreground: 215 20% 65%;
     --accent: 217 91% 60%;
     --accent-foreground: 210 30% 8%;
-    --destructive: 0 62% 30%;
+    --destructive: 0 77% 50%;
     --destructive-foreground: 213 27% 84%;
     --border: 217 32% 17%;
     --input: 217 32% 17%;
-    --ring: 47 96% 53%;
+    --ring: 51 100% 50%;
     --sidebar-background: 210 30% 8%;
     --sidebar-foreground: 213 27% 84%;
-    --sidebar-primary: 47 96% 53%;
+    --sidebar-primary: 51 100% 50%;
     --sidebar-primary-foreground: 210 30% 8%;
     --sidebar-accent: 217 32% 17%;
     --sidebar-accent-foreground: 213 27% 84%;
     --sidebar-border: 217 32% 17%;
-    --sidebar-ring: 47 96% 53%;
+    --sidebar-ring: 51 100% 50%;
   }
 }
 
@@ -144,6 +145,15 @@
 
 .bg-gradient-accent {
   background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--blue-medium)) 100%);
+}
+
+/* Cores customizadas para textos */
+.text-yellow-primary {
+  color: #FFD700;
+}
+
+.text-red-highlight {
+  color: #e80916;
 }
 
 /* Estilos para impressão/PDF */

@@ -21,6 +21,7 @@ interface RevenueData {
   iptu: string;
   despesasFixas: string;
   aportesMensais: string;
+  inquilinoPagaCustos: string;
 }
 
 interface PropertyAnalysisCardProps {
@@ -48,28 +49,34 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   
   const custoCartorio = valorCompra * taxaCartorio;
   const totalJurosFinanciamento = (valorParcela * prazoFinanciamento) - valorFinanciado;
-  const custoTotalInvestimento = valorCompra + totalJurosFinanciamento + reforma + outrasDespesas + custoCartorio;
+  const custoTotalInvestimento = valorCompra + totalJurosFinanciamento + reforma + outrasDespesas + custoCartorio - valorEntrada;
   
-  // Usar valores padrão quando não preenchidos
-  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || (valorCompra * 0.006);
-  const condominio = parseFloat(revenueData.condominio) / 100 || (aluguelBruto * 0.1);
-  const iptu = parseFloat(revenueData.iptu) / 100 || (valorCompra * 0.01 / 12);
-  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || (aluguelBruto * 0.08);
+  const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || 0;
+  const condominio = parseFloat(revenueData.condominio) / 100 || 0;
+  const iptu = parseFloat(revenueData.iptu) / 100 || 0;
+  const despesasFixas = parseFloat(revenueData.despesasFixas) / 100 || 0;
   const vacanciaPerc = parseFloat(revenueData.vacanciaMedia) || 8.0;
   const aportesMensais = parseFloat(revenueData.aportesMensais) / 100 || 0;
   
-  const custosMensais = valorParcela + condominio + iptu + despesasFixas;
+  // Custos mensais apenas do financiamento
+  const custosMensais = valorParcela;
+  
+  // Receita líquida considerando se inquilino paga custos à parte
+  const custosDescontadosAluguel = revenueData.inquilinoPagaCustos === "sim" ? 0 : (condominio + iptu + despesasFixas);
   const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
-  const receitaLiquidaMensal = aluguelBruto - vacanciaEstimada;
+  const receitaLiquidaMensal = aluguelBruto - custosDescontadosAluguel - vacanciaEstimada;
   const receitaLiquidaAnual = receitaLiquidaMensal * 12;
+  
   const resultadoMensal = receitaLiquidaMensal - custosMensais;
   
-  const roiMensal = custoTotalInvestimento > 0 ? (resultadoMensal / custoTotalInvestimento) * 100 : 0;
+  // ROI baseado apenas no valor do imóvel
+  const roiMensal = valorCompra > 0 ? (receitaLiquidaMensal / valorCompra) * 100 : 0;
   const roiAnual = roiMensal * 12;
   
-  // Payback com aportes
-  const fluxoMensalTotal = resultadoMensal + aportesMensais;
-  const paybackMeses = fluxoMensalTotal > 0 ? custoTotalInvestimento / fluxoMensalTotal : 0;
+  // Payback baseado no valor do investimento total incluindo entrada
+  const valorTotalInvestido = valorCompra + reforma + outrasDespesas + custoCartorio;
+  const fluxoMensalTotal = receitaLiquidaMensal + aportesMensais;
+  const paybackMeses = fluxoMensalTotal > 0 ? valorTotalInvestido / fluxoMensalTotal : 0;
   
   // Valorização anual estimada (5% ao ano)
   const valorizacaoAnual = 5;
@@ -89,10 +96,10 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       bgColor: "bg-primary/10"
     },
     {
-      title: "Custos Mensais",
+      title: "Custos Mensais (Financiamento)",
       value: formatCurrency(custosMensais),
       icon: Calculator,
-      color: "text-red-300",
+      color: "text-red-highlight",
       bgColor: "bg-red-500/10"
     },
     {
@@ -127,7 +134,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       title: "Resultado Mensal Final",
       value: formatCurrency(resultadoMensal),
       icon: Target,
-      color: resultadoMensal > 0 ? "text-accent" : "text-red-300",
+      color: resultadoMensal > 0 ? "text-accent" : "text-red-highlight",
       bgColor: resultadoMensal > 0 ? "bg-accent/10" : "bg-red-500/10"
     },
     {
@@ -177,6 +184,21 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
           ))}
         </div>
 
+        {/* Lembrete sobre a entrada */}
+        <div className="mt-4 p-3 bg-gradient-primary/10 rounded-lg border border-primary/20">
+          <p className="text-sm text-muted-foreground">
+            💡 <strong>Lembrete:</strong> Valor da entrada descontado: {formatCurrency(valorEntrada)}
+          </p>
+        </div>
+
+        {/* Resumo do Resultado Mensal */}
+        <div className="mt-4 p-3 bg-gradient-accent/10 rounded-lg border border-accent/20">
+          <h3 className="font-semibold text-foreground mb-2">Resumo do Resultado Mensal</h3>
+          <div className="text-sm text-muted-foreground">
+            <p>Receita Líquida: {formatCurrency(receitaLiquidaMensal)} - Custo Financiamento: {formatCurrency(custosMensais)} = <strong className={resultadoMensal >= 0 ? "text-accent" : "text-red-highlight"}>{formatCurrency(resultadoMensal)}</strong></p>
+          </div>
+        </div>
+
         {/* Comparativo de Investimentos */}
         <div className="mt-4 p-3 bg-gradient-accent/10 rounded-lg border border-accent/20">
           <h3 className="font-semibold text-foreground mb-3">Comparativo de Investimentos</h3>
@@ -197,7 +219,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
           
           {roiAnual <= Math.max(cdiAnual, poupancaAnual) && (
             <div className="mt-3 p-2 bg-red-500/10 border border-red-300/20 rounded-lg">
-              <p className="text-xs text-red-300 font-medium">
+              <p className="text-xs text-red-highlight font-medium">
                 ⚠️ Atenção: Este investimento tem rentabilidade inferior ao CDI ou Poupança.
               </p>
             </div>

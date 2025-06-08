@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -27,34 +28,38 @@ interface PropertySimulatorCardProps {
   setData: (data: PropertyData) => void;
 }
 
-const estadosCidades = {
-  "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira"],
-  "AL": ["Maceió", "Arapiraca", "Palmeira dos Índios", "Rio Largo"],
-  "AP": ["Macapá", "Santana", "Laranjal do Jari"],
-  "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru"],
-  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro", "Ilhéus", "Lauro de Freitas", "Itabuna"],
-  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral", "Crato", "Itapipoca"],
+const estadosBrasil = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
+
+const cidadesPorEstado = {
+  "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira", "Tarauacá", "Feijó", "Brasileia", "Plácido de Castro"],
+  "AL": ["Maceió", "Arapiraca", "Palmeira dos Índios", "Rio Largo", "Penedo", "União dos Palmares", "São Miguel dos Campos"],
+  "AP": ["Macapá", "Santana", "Laranjal do Jari", "Oiapoque", "Porto Grande", "Mazagão"],
+  "AM": ["Manaus", "Parintins", "Itacoatiara", "Manacapuru", "Coari", "Tefé", "Tabatinga", "Maués"],
+  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro", "Ilhéus", "Lauro de Freitas", "Itabuna", "Jequié", "Alagoinhas", "Barreiras", "Paulo Afonso", "Eunápolis", "Simões Filho", "Santo Antônio de Jesus"],
+  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral", "Crato", "Itapipoca", "Maranguape", "Iguatu", "Quixadá"],
   "DF": ["Brasília"],
-  "ES": ["Vitória", "Cariacica", "Vila Velha", "Serra", "Cachoeiro de Itapemirim"],
-  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde", "Luziânia", "Águas Lindas"],
-  "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias"],
-  "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra"],
-  "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá", "Ponta Porã"],
-  "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros", "Ribeirão das Neves", "Uberaba"],
-  "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Parauapebas", "Castanhal"],
-  "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos", "Bayeux"],
-  "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "São José dos Pinhais", "Foz do Iguaçu"],
-  "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina", "Paulista"],
-  "PI": ["Teresina", "Parnaíba", "Picos", "Piripiri", "Floriano"],
-  "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Campos dos Goytacazes", "Belford Roxo"],
-  "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante", "Macaíba"],
-  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria", "Gravataí", "Viamão"],
-  "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena", "Cacoal"],
-  "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
-  "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma", "Chapecó", "Itajaí"],
-  "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba"],
-  "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"],
-  "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional"]
+  "ES": ["Vitória", "Cariacica", "Vila Velha", "Serra", "Cachoeiro de Itapemirim", "Linhares", "São Mateus", "Colatina"],
+  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis", "Rio Verde", "Luziânia", "Águas Lindas", "Valparaíso de Goiás", "Trindade", "Formosa", "Novo Gama"],
+  "MA": ["São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias", "Codó", "Paço do Lumiar", "Açailândia"],
+  "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis", "Sinop", "Tangará da Serra", "Cáceres", "Barra do Garças"],
+  "MS": ["Campo Grande", "Dourados", "Três Lagoas", "Corumbá", "Ponta Porã", "Aquidauana", "Sidrolândia"],
+  "MG": ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares", "Ipatinga", "Sete Lagoas", "Divinópolis", "Santa Luzia"],
+  "PA": ["Belém", "Ananindeua", "Santarém", "Marabá", "Parauapebas", "Castanhal", "Abaetetuba", "Cametá", "Bragança"],
+  "PB": ["João Pessoa", "Campina Grande", "Santa Rita", "Patos", "Bayeux", "Sousa", "Cajazeiras"],
+  "PR": ["Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", "São José dos Pinhais", "Foz do Iguaçu", "Colombo", "Guarapuava", "Paranaguá"],
+  "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina", "Paulista", "Cabo de Santo Agostinho", "Camaragibe"],
+  "PI": ["Teresina", "Parnaíba", "Picos", "Piripiri", "Floriano", "Barras", "União"],
+  "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Campos dos Goytacazes", "Belford Roxo", "São João de Meriti", "Petrópolis", "Volta Redonda", "Magé", "Macaé", "Itaboraí", "Cabo Frio"],
+  "RN": ["Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante", "Macaíba", "Ceará-Mirim", "Caicó"],
+  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria", "Gravataí", "Viamão", "Novo Hamburgo", "São Leopoldo", "Rio Grande", "Alvorada", "Passo Fundo"],
+  "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes", "Vilhena", "Cacoal", "Rolim de Moura"],
+  "RR": ["Boa Vista", "Rorainópolis", "Caracaraí", "Alto Alegre", "Mucajaí"],
+  "SC": ["Florianópolis", "Joinville", "Blumenau", "São José", "Criciúma", "Chapecó", "Itajaí", "Lages", "Palhoça", "Balneário Camboriú"],
+  "SP": ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Ribeirão Preto", "Sorocaba", "Mauá", "São José dos Campos", "Mogi das Cruzes", "Diadema", "Jundiaí", "Carapicuíba", "Piracicaba", "Bauru", "Itaquaquecetuba", "Franca", "São Vicente"],
+  "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana", "Estância", "Tobias Barreto"],
+  "TO": ["Palmas", "Araguaína", "Gurupi", "Porto Nacional", "Paraíso do Tocantins", "Colinas do Tocantins"]
 };
 
 const taxasJurosPorEstado = {
@@ -77,15 +82,6 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
     }).format(value);
   };
 
-  const formatInputCurrency = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    const amount = parseFloat(numbers) / 100;
-    return amount.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
   const getCurrencyDisplayValue = (value: string) => {
     if (!value) return '';
     const amount = parseFloat(value) / 100;
@@ -100,14 +96,25 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
     
     // Auto-calcular campos dependentes
     if (field === 'estado') {
-      setCidadesFiltradas(estadosCidades[value as keyof typeof estadosCidades] || []);
+      setCidadesFiltradas(cidadesPorEstado[value as keyof typeof cidadesPorEstado] || []);
       newData.cidade = "";
       newData.percentualJuros = taxasJurosPorEstado[value as keyof typeof taxasJurosPorEstado] || "10.5";
     }
     
-    if (field === 'valorCompra' || field === 'valorEntrada') {
+    // Auto-calcular entrada (20% do valor do imóvel)
+    if (field === 'valorCompra') {
+      const valorCompra = parseFloat(value.replace(/\D/g, '')) / 100 || 0;
+      if (valorCompra > 0) {
+        const entrada = valorCompra * 0.2;
+        newData.valorEntrada = (entrada * 100).toString();
+        const valorFinanciado = valorCompra - entrada;
+        newData.valorFinanciado = (valorFinanciado * 100).toString();
+      }
+    }
+    
+    if (field === 'valorEntrada') {
       const valorCompra = parseFloat(newData.valorCompra.replace(/\D/g, '')) / 100 || 0;
-      const valorEntrada = parseFloat(newData.valorEntrada.replace(/\D/g, '')) / 100 || 0;
+      const valorEntrada = parseFloat(value.replace(/\D/g, '')) / 100 || 0;
       if (valorCompra > 0 && valorEntrada > 0) {
         const valorFinanciado = valorCompra - valorEntrada;
         newData.valorFinanciado = (valorFinanciado * 100).toString();
@@ -173,7 +180,7 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
                 <SelectValue placeholder="Selecione o estado" />
               </SelectTrigger>
               <SelectContent>
-                {Object.keys(estadosCidades).map((estado) => (
+                {estadosBrasil.map((estado) => (
                   <SelectItem key={estado} value={estado}>
                     {estado}
                   </SelectItem>
@@ -264,7 +271,7 @@ export function PropertySimulatorCard({ data, setData }: PropertySimulatorCardPr
               <div className="space-y-2">
                 <Label htmlFor="valorEntrada" className="text-foreground font-medium">
                   Valor da Entrada (R$)
-                  <span className="text-xs text-muted-foreground block">Financiamentos exigem mín. 20% do valor</span>
+                  <span className="text-xs text-muted-foreground block">Padrão: 20% - Financiamentos exigem mín. 20% do valor</span>
                 </Label>
                 <Input
                   id="valorEntrada"

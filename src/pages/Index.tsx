@@ -32,6 +32,7 @@ interface RevenueData {
   iptu: string;
   despesasFixas: string;
   aportesMensais: string;
+  inquilinoPagaCustos: string;
 }
 
 const Index = () => {
@@ -59,7 +60,8 @@ const Index = () => {
     condominio: "",
     iptu: "",
     despesasFixas: "",
-    aportesMensais: ""
+    aportesMensais: "",
+    inquilinoPagaCustos: "nao"
   });
 
   const [isCalculated, setIsCalculated] = useState(false);
@@ -87,7 +89,7 @@ const Index = () => {
         {/* Header */}
         <div className="text-center space-y-4 animate-fade-in">
           <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
-            Simulador de <span className="bg-yellow-primary text-black px-2 py-1 rounded font-bold">Investimentos</span> Imobiliários
+            Simulador de <span className="text-yellow-primary font-bold">Investimentos</span> Imobiliários
           </h1>
           <p className="text-base text-muted-foreground max-w-2xl mx-auto">
             Analise a rentabilidade dos seus investimentos imobiliários e descubra o potencial de retorno em aluguel e revenda.
@@ -133,7 +135,7 @@ const Index = () => {
         )}
 
         {/* Footer */}
-        <footer className="mt-8 py-2 border-t border-border/30 text-center">
+        <footer className="mt-8 py-1 border-t border-border/30 text-center">
           <p className="text-xs text-muted-foreground">
             <span className="font-semibold">Construa seu Futuro</span> - Todos os Direitos Reservados
           </p>
