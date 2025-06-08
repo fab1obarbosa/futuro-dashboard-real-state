@@ -48,8 +48,10 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   const valorParcela = parseFloat(propertyData.valorParcela) / 100 || 0;
   
   const custoCartorio = valorCompra * taxaCartorio;
-  const totalJurosFinanciamento = (valorParcela * prazoFinanciamento) - valorFinanciado;
-  const custoTotalInvestimento = valorCompra + totalJurosFinanciamento + reforma + outrasDespesas + custoCartorio - valorEntrada;
+  const totalJurosFinanciamento = prazoFinanciamento > 0 ? (valorParcela * prazoFinanciamento) - valorFinanciado : 0;
+  
+  // Custo total corrigido: valor do imóvel + juros do financiamento - entrada
+  const custoTotalInvestimento = valorCompra + totalJurosFinanciamento + reforma + outrasDespesas + custoCartorio;
   
   const aluguelBruto = parseFloat(revenueData.aluguelMensal) / 100 || 0;
   const condominio = parseFloat(revenueData.condominio) / 100 || 0;
@@ -73,10 +75,10 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
   const roiMensal = valorCompra > 0 ? (receitaLiquidaMensal / valorCompra) * 100 : 0;
   const roiAnual = roiMensal * 12;
   
-  // Payback baseado no valor do investimento total incluindo entrada
-  const valorTotalInvestido = valorCompra + reforma + outrasDespesas + custoCartorio;
+  // Payback baseado no valor do investimento total (sem entrada)
   const fluxoMensalTotal = receitaLiquidaMensal + aportesMensais;
-  const paybackMeses = fluxoMensalTotal > 0 ? valorTotalInvestido / fluxoMensalTotal : 0;
+  // Payback em meses - Quanto tempo leva para recuperar o valor total do imóvel
+  const paybackMeses = fluxoMensalTotal > 0 ? valorCompra / fluxoMensalTotal : 0;
   
   // Valorização anual estimada (5% ao ano)
   const valorizacaoAnual = 5;
@@ -92,7 +94,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       title: "Custo Total do Investimento",
       value: formatCurrency(custoTotalInvestimento),
       icon: Target,
-      color: "text-primary",
+      color: "text-yellow-primary",
       bgColor: "bg-primary/10"
     },
     {
@@ -120,14 +122,14 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       title: "ROI Mensal",
       value: `${roiMensal.toFixed(2)}%`,
       icon: TrendingUp,
-      color: "text-primary",
+      color: "text-yellow-primary",
       bgColor: "bg-primary/10"
     },
     {
       title: "ROI Anual",
       value: `${roiAnual.toFixed(2)}%`,
       icon: TrendingUp,
-      color: "text-primary",
+      color: "text-yellow-primary",
       bgColor: "bg-primary/10"
     },
     {
@@ -141,7 +143,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
       title: "Payback Estimado",
       value: `${paybackMeses.toFixed(0)} meses (${(paybackMeses/12).toFixed(1)} anos)`,
       icon: Home,
-      color: "text-primary",
+      color: "text-yellow-primary",
       bgColor: "bg-primary/10"
     },
     {
@@ -187,7 +189,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
         {/* Lembrete sobre a entrada */}
         <div className="mt-4 p-3 bg-gradient-primary/10 rounded-lg border border-primary/20">
           <p className="text-sm text-muted-foreground">
-            💡 <strong>Lembrete:</strong> Valor da entrada descontado: {formatCurrency(valorEntrada)}
+            💡 <strong>Lembrete:</strong> Valor da entrada: {formatCurrency(valorEntrada)}
           </p>
         </div>
 
@@ -196,6 +198,11 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
           <h3 className="font-semibold text-foreground mb-2">Resumo do Resultado Mensal</h3>
           <div className="text-sm text-muted-foreground">
             <p>Receita Líquida: {formatCurrency(receitaLiquidaMensal)} - Custo Financiamento: {formatCurrency(custosMensais)} = <strong className={resultadoMensal >= 0 ? "text-accent" : "text-red-highlight"}>{formatCurrency(resultadoMensal)}</strong></p>
+            {revenueData.inquilinoPagaCustos === "sim" ? (
+              <p className="mt-1 text-xs">*Inquilino paga custos separadamente (condomínio, IPTU, despesas fixas)</p>
+            ) : (
+              <p className="mt-1 text-xs">*Descontado do aluguel: Condomínio ({formatCurrency(condominio)}), IPTU ({formatCurrency(iptu)}), Outras Despesas ({formatCurrency(despesasFixas)})</p>
+            )}
           </div>
         </div>
 
@@ -205,7 +212,7 @@ export function PropertyAnalysisCard({ propertyData, revenueData }: PropertyAnal
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
             <div className="text-center">
               <span className="text-muted-foreground">Imóvel (ROI)</span>
-              <p className="font-bold text-lg text-primary">{roiAnual.toFixed(2)}%</p>
+              <p className="font-bold text-lg text-yellow-primary">{roiAnual.toFixed(2)}%</p>
             </div>
             <div className="text-center">
               <span className="text-muted-foreground">CDI</span>

@@ -69,6 +69,7 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
   const iptu = parseFloat(data.iptu) / 100 || 0;
   const despesasFixas = parseFloat(data.despesasFixas) / 100 || 0;
   const vacanciaPerc = parseFloat(data.vacanciaMedia) || 8.0;
+  const aportesMensais = parseFloat(data.aportesMensais) / 100 || 0;
   
   const despesasMensais = data.inquilinoPagaCustos === "sim" ? 0 : (condominio + iptu + despesasFixas);
   const vacanciaEstimada = (aluguelBruto * vacanciaPerc) / 100;
@@ -113,18 +114,6 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="vacanciaMedia" className="text-foreground font-medium">Vacância Média (%)</Label>
-            <Input
-              id="vacanciaMedia"
-              type="number"
-              step="0.1"
-              value={data.vacanciaMedia}
-              onChange={(e) => updateData('vacanciaMedia', e.target.value)}
-              className="bg-background/50 border-border/50"
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="inquilinoPagaCustos" className="text-foreground font-medium">
               Inquilino Paga Custos Separadamente?
             </Label>
@@ -137,6 +126,18 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
                 <SelectItem value="nao">Não - Descontar do aluguel</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="vacanciaMedia" className="text-foreground font-medium">Vacância Média (%)</Label>
+            <Input
+              id="vacanciaMedia"
+              type="number"
+              step="0.1"
+              value={data.vacanciaMedia}
+              onChange={(e) => updateData('vacanciaMedia', e.target.value)}
+              className="bg-background/50 border-border/50"
+            />
           </div>
 
           <div className="space-y-2">
@@ -205,7 +206,7 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground">Aluguel Bruto:</span>
-              <p className="font-semibold text-primary">{formatCurrency(aluguelBruto)}</p>
+              <p className="font-semibold text-yellow-primary">{formatCurrency(aluguelBruto)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Despesas Mensais:</span>
@@ -226,6 +227,11 @@ export function RevenueProjectionCard({ data, setData, propertyData, onCalculate
               `Despesas incluem: Condomínio (${formatCurrency(condominio)}), IPTU (${formatCurrency(iptu)}), Despesas Fixas (${formatCurrency(despesasFixas)})`
             }
           </div>
+          {aportesMensais > 0 && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              *Aportes mensais adicionais de {formatCurrency(aportesMensais)} considerados para cálculo de payback
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

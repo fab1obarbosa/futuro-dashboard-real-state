@@ -162,6 +162,8 @@
     background: white !important;
     color: black !important;
     font-size: 12px;
+    margin: 0;
+    padding: 20px;
   }
   
   .bg-gradient-card,
@@ -169,6 +171,8 @@
   .bg-gradient-accent {
     background: white !important;
     border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 20px;
   }
   
   .shadow-lg,
@@ -193,10 +197,57 @@
   
   h1, h2, h3 {
     page-break-after: avoid;
+    color: #000 !important;
   }
   
   .recharts-wrapper {
     page-break-inside: avoid;
     margin-bottom: 2rem !important;
+  }
+  
+  /* Garante que o conteúdo seja formatado para folha A4 */
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+  
+  /* Força quebras de página em seções importantes */
+  .main-section {
+    page-break-before: always;
+  }
+  
+  /* Remove cores de fundo e coloca bordas para melhor leitura */
+  .card, 
+  .bg-background,
+  .bg-primary,
+  .bg-secondary,
+  .bg-accent {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    color: #000 !important;
+  }
+  
+  /* Ajusta textos coloridos para preto */
+  .text-primary,
+  .text-secondary,
+  .text-accent,
+  .text-muted-foreground {
+    color: #000 !important;
+  }
+  
+  /* Valores negativos em vermelho mesmo na impressão */
+  .text-red-highlight {
+    color: #c00 !important;
+  }
+  
+  /* Valores positivos em verde na impressão */
+  .text-accent {
+    color: #070 !important;
+  }
+
+  /* Ajusta o tamanho dos gráficos */
+  .recharts-wrapper {
+    width: 100% !important;
+    height: auto !important;
   }
 }

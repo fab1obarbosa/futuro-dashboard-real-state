@@ -69,7 +69,7 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
 
   const getInvestmentAdvice = (score: number) => {
     if (score <= 30) return { text: "✅ Excelente investimento! Baixo risco e boa perspectiva de retorno.", color: "text-green-400" };
-    if (score <= 60) return { text: "⚠️ Investimento médio. Considere os riscos antes de prosseguir.", color: "text-yellow-400" };
+    if (score <= 60) return { text: "⚠️ Investimento moderado. Considere os riscos antes de prosseguir.", color: "text-yellow-400" };
     return { text: "❌ Investimento arriscado. Recomendamos cautela e reavaliação.", color: "text-red-highlight" };
   };
 
@@ -122,7 +122,7 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
                 <h4 className="font-medium text-foreground text-sm">{item.title}</h4>
                 <p className="text-xs text-muted-foreground">{item.description}</p>
               </div>
-              <span className="text-base font-bold text-primary">{item.value.toFixed(0)}%</span>
+              <span className="text-base font-bold text-yellow-primary">{item.value.toFixed(0)}%</span>
             </div>
             <div className="relative">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
@@ -141,7 +141,7 @@ export function RiskAssessmentCard({ propertyData, revenueData }: RiskAssessment
         <div className="mt-6 p-3 bg-gradient-primary/10 rounded-lg border border-primary/20">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-semibold text-foreground">Média Geral de Riscos</h3>
-            <span className="text-xl font-bold text-primary">{mediaGeral.toFixed(0)}%</span>
+            <span className="text-xl font-bold text-yellow-primary">{mediaGeral.toFixed(0)}%</span>
           </div>
           <div className="relative">
             <div className="flex justify-between text-xs text-muted-foreground mb-1">
