@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, Legend } from 'recharts';
 import { BarChart3, Download, TrendingUp, DollarSign } from "lucide-react";
@@ -141,6 +142,15 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       fluxoMensalLiquido,
       payback: valorTotalInvestido / (receitaLiquida * 12)
     };
+    
+    // Recomendações baseadas na análise
+    const getAdvice = (fluxo: number, roi: number) => {
+      if (fluxo > 0 && roi >= 8) return "Investimento recomendado com boa rentabilidade";
+      if (fluxo >= 0 && roi >= 6) return "Investimento moderado, considere outras opções";
+      return "Investimento arriscado, recomenda-se cautela";
+    };
+
+    const adviceText = getAdvice(fluxoMensalLiquido, roiAnual);
     
     // Criar estrutura HTML para o PDF
     const htmlContent = `
@@ -300,7 +310,7 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
 
         <div class="status-box">
           <h3>Status do Investimento: ${semaforo.texto}</h3>
-          <p>${semaforo.emoji} ${advice.text}</p>
+          <p>${semaforo.emoji} ${adviceText}</p>
         </div>
 
         <div class="section">
@@ -346,11 +356,11 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header com botão de download */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-foreground">Gráficos e Análises</h2>
-        <Button onClick={generatePDFReport} className="bg-gradient-primary text-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <h2 className="text-lg sm:text-xl font-bold text-foreground">Gráficos e Análises</h2>
+        <Button onClick={generatePDFReport} className="bg-gradient-primary text-sm w-full sm:w-auto">
           <Download className="w-4 h-4 mr-2" />
           Baixar Relatório
         </Button>
@@ -359,21 +369,21 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       {/* ROI e Sinalização */}
       <Card className="bg-gradient-card border-border/50 shadow-lg">
         <CardHeader className="pb-3">
-          <CardTitle className="text-center text-lg">Análise de Viabilidade</CardTitle>
+          <CardTitle className="text-center text-base sm:text-lg">Análise de Viabilidade</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+            <div className="p-2">
               <h3 className="text-xs text-muted-foreground mb-1">ROI Mensal</h3>
-              <p className="text-xl font-bold text-yellow-primary">{roiMensal.toFixed(2)}%</p>
+              <p className="text-lg sm:text-xl font-bold text-yellow-primary">{roiMensal.toFixed(2)}%</p>
             </div>
-            <div>
+            <div className="p-2">
               <h3 className="text-xs text-muted-foreground mb-1">ROI Anual</h3>
-              <p className="text-xl font-bold text-yellow-primary">{roiAnual.toFixed(2)}%</p>
+              <p className="text-lg sm:text-xl font-bold text-yellow-primary">{roiAnual.toFixed(2)}%</p>
             </div>
-            <div>
+            <div className="p-2">
               <h3 className="text-xs text-muted-foreground mb-1">Sinalização</h3>
-              <div className={`w-12 h-12 mx-auto rounded-full ${semaforo.cor} flex items-center justify-center`}>
+              <div className={`w-10 h-10 mx-auto rounded-full ${semaforo.cor} flex items-center justify-center`}>
                 <span className="text-white text-lg">{semaforo.emoji}</span>
               </div>
               <p className="text-xs mt-1 font-medium">{semaforo.texto}</p>
@@ -386,21 +396,21 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
         
         {/* Receitas vs Despesas (Pizza) */}
-        <Card className="bg-gradient-card border-border/50 shadow-lg h-80">
+        <Card className="bg-gradient-card border-border/50 shadow-lg h-72">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
               <BarChart3 className="w-4 h-4" />
               Receitas vs Despesas
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-60">
+          <CardContent className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={50}
+                  outerRadius={45}
                   dataKey="value"
                   label={({value}) => formatCurrency(value)}
                 />
@@ -412,18 +422,18 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         </Card>
 
         {/* Comparativo de Investimentos (Pizza) */}
-        <Card className="bg-gradient-card border-border/50 shadow-lg h-80">
+        <Card className="bg-gradient-card border-border/50 shadow-lg h-72">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Comparativo ROI (%)</CardTitle>
           </CardHeader>
-          <CardContent className="h-60">
+          <CardContent className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={investmentComparisonData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={50}
+                  outerRadius={45}
                   dataKey="value"
                   label={({value}) => `${value.toFixed(1)}%`}
                 />
@@ -435,11 +445,11 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         </Card>
 
         {/* Fluxo de Caixa Mensal */}
-        <Card className="bg-gradient-card border-border/50 shadow-lg h-80">
+        <Card className="bg-gradient-card border-border/50 shadow-lg h-72">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Fluxo de Caixa Mensal</CardTitle>
           </CardHeader>
-          <CardContent className="h-60">
+          <CardContent className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={rentabilidadeData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -455,11 +465,11 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         </Card>
 
         {/* Valorização para Revenda */}
-        <Card className="bg-gradient-card border-border/50 shadow-lg h-80">
+        <Card className="bg-gradient-card border-border/50 shadow-lg h-72">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Valorização p/ Revenda</CardTitle>
           </CardHeader>
-          <CardContent className="h-60">
+          <CardContent className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={valorizacaoRevendaData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -475,11 +485,11 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         </Card>
 
         {/* Retorno vs Inflação */}
-        <Card className="bg-gradient-card border-border/50 shadow-lg h-80">
+        <Card className="bg-gradient-card border-border/50 shadow-lg h-72">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Retorno vs Inflação</CardTitle>
           </CardHeader>
-          <CardContent className="h-60">
+          <CardContent className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={Array.from({ length: 10 }, (_, i) => ({
                 ano: i + 1,
@@ -499,11 +509,11 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
         </Card>
 
         {/* Cenários de Vacância */}
-        <Card className="bg-gradient-card border-border/50 shadow-lg h-80">
+        <Card className="bg-gradient-card border-border/50 shadow-lg h-72">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Cenários de Vacância</CardTitle>
           </CardHeader>
-          <CardContent className="h-60">
+          <CardContent className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={[
                 { cenario: "5%", receita: aluguelBruto * (1 - 0.05) },
@@ -526,15 +536,15 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       {/* Comparativo Longo Prazo - Maior */}
       <Card className="bg-gradient-card border-border/50 shadow-lg">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Comparativo Longo Prazo: Imóvel vs CDI vs Poupança</CardTitle>
+          <CardTitle className="text-sm sm:text-base">Comparativo Longo Prazo: Imóvel vs CDI vs Poupança</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={candlestickData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={12} />
+                <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={10} />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
                 <Line type="monotone" dataKey="imovel" stroke="#FFD700" strokeWidth={3} name="Total Imóvel (Aluguel + Valorização)" />
@@ -550,15 +560,15 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       {/* Evolução Patrimonial em Colunas */}
       <Card className="bg-gradient-card border-border/50 shadow-lg">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Evolução Patrimonial (10 anos)</CardTitle>
+          <CardTitle className="text-sm sm:text-base">Evolução Patrimonial (10 anos)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={evolutionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={12} />
+                <XAxis dataKey="ano" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={formatCurrency} fontSize={10} />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
                 <Bar dataKey="aluguelAcumulado" fill="#FFD700" name="Aluguel Acumulado" />
@@ -572,46 +582,46 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       {/* Resumo Final Melhorado */}
       <Card className="bg-gradient-to-br from-primary/20 via-accent/20 to-yellow-primary/20 border-primary/30 shadow-xl">
         <CardHeader>
-          <CardTitle className="text-center text-lg flex items-center justify-center gap-2">
-            <TrendingUp className="w-5 h-5" />
+          <CardTitle className="text-center text-base sm:text-lg flex items-center justify-center gap-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
             Resumo Final da Análise
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h3 className="font-bold text-base text-yellow-primary mb-3 flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-2 sm:space-y-3">
+              <h3 className="font-bold text-sm sm:text-base text-yellow-primary mb-2 sm:mb-3 flex items-center gap-2">
+                <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
                 Indicadores Principais
               </h3>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
-                  <span className="text-foreground text-sm">💰 ROI Anual:</span>
-                  <span className="font-bold text-lg text-yellow-primary">{roiAnual.toFixed(2)}%</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-xs sm:text-sm">💰 ROI Anual:</span>
+                  <span className="font-bold text-sm sm:text-lg text-yellow-primary">{roiAnual.toFixed(2)}%</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
-                  <span className="text-foreground text-sm">💵 Fluxo Mensal:</span>
-                  <span className={`font-bold text-lg ${fluxoMensalLiquido >= 0 ? 'text-green-400' : 'text-red-highlight'}`}>{formatCurrency(fluxoMensalLiquido)}</span>
+                <div className="flex justify-between items-center p-2 sm:p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-xs sm:text-sm">💵 Fluxo Mensal:</span>
+                  <span className={`font-bold text-sm sm:text-lg ${fluxoMensalLiquido >= 0 ? 'text-green-400' : 'text-red-highlight'}`}>{formatCurrency(fluxoMensalLiquido)}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
-                  <span className="text-foreground text-sm">📊 Status:</span>
-                  <span className={`font-bold text-lg ${semaforo.texto === 'Viável' ? 'text-green-400' : semaforo.texto === 'Moderado' ? 'text-yellow-400' : 'text-red-highlight'}`}>
+                <div className="flex justify-between items-center p-2 sm:p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-xs sm:text-sm">📊 Status:</span>
+                  <span className={`font-bold text-sm sm:text-lg ${semaforo.texto === 'Viável' ? 'text-green-400' : semaforo.texto === 'Moderado' ? 'text-yellow-400' : 'text-red-highlight'}`}>
                     {semaforo.texto}
                   </span>
                 </div>
               </div>
             </div>
-            <div className="space-y-3">
-              <h3 className="font-bold text-base text-accent mb-3">💡 Recomendações</h3>
+            <div className="space-y-2 sm:space-y-3">
+              <h3 className="font-bold text-sm sm:text-base text-accent mb-2 sm:mb-3">💡 Recomendações</h3>
               <div className="space-y-2">
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <span className="text-foreground text-sm">🔄 Considere renegociar o valor de compra</span>
+                <div className="p-2 sm:p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-xs sm:text-sm">🔄 Considere renegociar o valor de compra</span>
                 </div>
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <span className="text-foreground text-sm">🏘️ Avalie outras opções na região</span>
+                <div className="p-2 sm:p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-xs sm:text-sm">🏘️ Avalie outras opções na região</span>
                 </div>
-                <div className="p-3 bg-background/50 rounded-lg">
-                  <span className="text-foreground text-sm">📈 Compare com outros investimentos</span>
+                <div className="p-2 sm:p-3 bg-background/50 rounded-lg">
+                  <span className="text-foreground text-xs sm:text-sm">📈 Compare com outros investimentos</span>
                 </div>
               </div>
             </div>
@@ -620,8 +630,8 @@ export function ChartsAnalysisCard({ propertyData, revenueData }: ChartsAnalysis
       </Card>
 
       {/* Aviso sobre variações */}
-      <div className="mt-4 p-4 bg-gradient-accent/10 rounded-lg border border-accent/20">
-        <p className="text-sm text-muted-foreground text-center">
+      <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-accent/10 rounded-lg border border-accent/20">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center">
           ⚠️ <strong>Importante:</strong> Todo retorno e valorização podem variar de acordo com o bairro e acontecimentos da localização no período, podendo valorizar ou desvalorizar.
         </p>
       </div>
